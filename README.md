@@ -2,6 +2,7 @@
 1. 安装mysql，root设置密码为gb310
 2. prepare_env.bat创建stock虚拟环境，报错就自己缺啥装啥
 3. 然后启动start_program.bat就好了
+4. 如果需要实时更新数据[实盘]就点击realtim_updating.bat【不在交易时间内记得关掉】
 # #######
 
 
