@@ -14,6 +14,7 @@ def stock_lhb_detail_em(
     start_date: str = "20230403", end_date: str = "20230417"
 ) -> pd.DataFrame:
     """
+    股票的视角
     东方财富网-数据中心-龙虎榜单-龙虎榜详情
     https://data.eastmoney.com/stock/tradedetail.html
     :param start_date: 开始日期
@@ -839,7 +840,7 @@ def stock_lhb_stock_detail_em(
 
 if __name__ == "__main__":
     stock_lhb_detail_em_df = stock_lhb_detail_em(
-        start_date="20230403", end_date="20230417"
+        start_date="20240713", end_date="20240724"
     )
     print(stock_lhb_detail_em_df)
 
@@ -856,7 +857,7 @@ if __name__ == "__main__":
     print(stock_lhb_stock_statistic_em_df)
 
     stock_lhb_jgmmtj_em_df = stock_lhb_jgmmtj_em(
-        start_date="20220904", end_date="20220906"
+         start_date="20240713", end_date="20240724"
     )
     print(stock_lhb_jgmmtj_em_df)
 
@@ -864,7 +865,7 @@ if __name__ == "__main__":
     print(stock_lhb_jgstatistic_em_df)
 
     stock_lhb_hyyyb_em_df = stock_lhb_hyyyb_em(
-        start_date="20220324", end_date="20220324"
+         start_date="20240713", end_date="20240724"
     )
     print(stock_lhb_hyyyb_em_df)
 
