@@ -3,6 +3,11 @@
 2. prepare_env.bat创建stock虚拟环境，报错就自己缺啥装啥
 3. 然后启动start_program.bat就好了
 4. 如果需要实时更新数据[实盘]就点击realtim_updating.bat【不在交易时间内记得关掉】
+5. 增加explore文件夹，主要是为了图数据库可视化龙虎榜关系
+![](img/neo.png)
+下载和安装上图包,添加neo4j到环境系统路径，然后启动图数据库，可以用浏览器看数据库中的关系
+![](img/neo2.png)
+![](img/neo4.png)
 # #######
 
 

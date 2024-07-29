@@ -137,13 +137,13 @@ def lhb_yyb_stock_daily_work(start_date="20240725", end_date="20240725",delete=T
     with TransactionWrapper(graph) as tx:
          # 遍历DataFrame的每一行，为每一行创建一个节点
         for index, row in df_processed.iterrows():
-            node_yyb = Node("营业部名称",
+            node_yyb = Node("营业部",
                             name=row["营业部名称"],
                             date=str(row['上榜日']),
                             netIn=row["总买卖净额"],
                             inPct= round(row["总买卖净额"] / (row["买入总金额"]  + 1), 3),) 
             #tx.create(node_yyb)
-            tx.merge(node_yyb,"营业部名称","name")
+            tx.merge(node_yyb,"营业部","name")
             stocks = row["买入股票"].strip().split()
             if stocks:
                 for stock in stocks:
@@ -164,7 +164,7 @@ def lhb_yyb_stock_daily_work(start_date="20240725", end_date="20240725",delete=T
                     tx.merge(node_stock,"股票","name")
                     
 
-                    real = Relationship(node_stock,'投资',node_yyb)
+                    real = Relationship(node_yyb,'投资',node_stock)
                     tx.create(real)
 
     #获取属性degree 
@@ -186,60 +186,88 @@ def lhb_yyb_stock_daily_work(start_date="20240725", end_date="20240725",delete=T
                 MATCH (n:股票) 
                 RETURN n;
                 """
-        query_yyb =  """
-                    MATCH (n:营业部) 
-                    RETURN n;
-                    """
+        # query_yyb =  """
+        #             MATCH (n:营业部) 
+        #             RETURN n;
+        #             """
         stocks = tx.run(query).data()
-        yybs = tx.run(query_yyb).data()
+        #yybs = tx.run(query_yyb).data()
         # stocks.data()
-        for stock_dcit in stocks:
+        columns= ["序号","交易营业部名称","买入金额","买入金额-占总成交比例","卖出金额","卖出金额-占总成交比例"	,"净额","类型"]
+        for stock_dcit in tqdm(stocks):
             stock = stock_dcit["n"]
-            columns= ["序号","交易营业部名称","买入金额","买入金额-占总成交比例","卖出金额","卖出金额-占总成交比例"	,"净额","类型"]
-            stock_sell = stock_lhb_stock_detail_em(symbol=stock["代码"], date=end_date, flag="卖出")
-            yyb_names = stock_sell["交易营业部名称"]
-            for yyb_name in yyb_names:
-                query_yyb =  f"""
-                            MATCH (n) 
-                            WHERE n.name = {yyb_name}
-                            RETURN n;
-                            """
-                yybs_sells_nodes = tx.run(query_yyb).data()
-                #找到股票对应的营业部node
-                for it in yybs_sells_nodes:
-                    #node
-                    yyb_node = it["n"]
-                    #stock和node之间relationship
-                    real = Relationship(yyb_node,'流出',stock)
-                    tx.create(real)
+            
+            if 1:
+                stock_sell = stock_lhb_stock_detail_em(symbol=stock["代码"], date=end_date, flag="卖出")
+                yyb_names = stock_sell["交易营业部名称"]
+                order_ = stock_sell[columns[0]]
+                #cypher查询sell node节点
+                for i,yyb_name in enumerate(yyb_names):
+                    #如果没有对应yyb就创建
+                    params = {"name": yyb_name} 
+                    query_yyb = """
+                                MERGE (n:营业部 {name: $name})
+                                ON CREATE SET  n.name = $name
+                                RETURN n;
+                                """
+                    #找到股票对应的营业部node
+                    yybs_sells_nodes = tx.run(query_yyb,params).data()
+                    for it in yybs_sells_nodes:
+                        if i  >= 5:
+                            #重复数据
+                            break
+                        #get nodes
+                        yyb_node = it["n"]
+                        #stock和node之间建立relationship
+                        
+                            # print(1)
+                        real = Relationship(stock,
+                                            f'卖_{order_[i]}',
+                                            yyb_node,
+                                            卖出金额=float(stock_sell.loc[i,columns[4]]),
+                                            卖出金额_占总成交比例=float(stock_sell.loc[i,columns[5]])
+                                                )
+                        tx.create(real)
                     
                     
-                    
-            
-            stock_buy = stock_lhb_stock_detail_em(symbol=stock["代码"], date=end_date, flag="买入")
-            yyb_names = stock_buy["交易营业部名称"]
-            for yyb_name in yyb_names:
-                query_yyb =  f"""
-                            MATCH (n) 
-                            WHERE n.name = '{yyb_name}'
-                            RETURN n;
-                            """
-                yybs_buys_nodes = tx.run(query_yyb).data()
-                #找到股票对应的营业部node
-                for it in yybs_buys_nodes:
-                    #node
-                    yyb_node = it["n"]
-                    #stock和node之间relationship
-                    real = Relationship(yyb_node,'流入',stock)
-                    tx.create(real)
-            
-            
+            if 1:     
+                #buy
+                stock_buy = stock_lhb_stock_detail_em(symbol=stock["代码"], date=end_date, flag="买入")
+                yyb_names = stock_buy["交易营业部名称"]
+                order_buy = stock_buy[columns[0]]
+                for j,yyb_name in enumerate(yyb_names):
+                    #没有该营业部的话就创建一个yyb_node
+                    params = {"name": yyb_name} 
+                    query_yyb = """
+                                MERGE (n:营业部 {name: $name})
+                                ON CREATE SET  n.name = $name
+                                RETURN n;
+                                """
+                    yybs_buys_nodes = tx.run(query_yyb,params).data()
+                    #找到股票对应的营业部node
+                    for it in yybs_buys_nodes:
+                        if i  >= 5:
+                            #重复数据
+                            break
+                        #node
+                        yyb_node = it["n"]
+                        #stock和node之间cerate relationship
+                        real = Relationship(yyb_node,
+                                            f'买_{order_buy[j]}',
+                                            stock,
+                                            买入金额=float(stock_buy.loc[j,columns[2]]),
+                                            买入金额_占总成交比例=float(stock_buy.loc[j,columns[3]])
+                                            )
+                        tx.create(real)
+                
+                
             
             
         
 
 
 if __name__ == "__main__":
+    s = time.time()
     # stock_lhb_detail_em_df = stock_lhb_detail_em(
     #     start_date="20240725", end_date="20240725"
     # )
@@ -271,7 +299,7 @@ if __name__ == "__main__":
     # stock_lhb_jgstatistic_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
 
     ##构建营业部和股票的关系图
-    lhb_yyb_stock_daily_work(start_date="20240725", end_date="20240725")
+    lhb_yyb_stock_daily_work(start_date="20240726", end_date="20240726")
     
     
 
@@ -304,3 +332,4 @@ if __name__ == "__main__":
     # stock_lhb_stock_detail_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
 
 
+    print(f"it cost: {time.time() - s} seconds.")
