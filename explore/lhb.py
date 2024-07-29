@@ -9,6 +9,7 @@ from py2neo import Graph, Subgraph
 from py2neo import Node, Relationship, Path
 from datetime import datetime
 import json
+from instock.core.crawling.stock_selection import * 
 
 #数据库链接密码
 NEO4J_PASSWORD = "root"
@@ -123,7 +124,7 @@ def lhb_yyb_stock_daily_work(start_date="20240725", end_date="20240725",delete=T
     stock_lhb_hyyyb_em_df = stock_lhb_hyyyb_em(
          start_date=start_date, end_date=end_date
     )
-    stock_lhb_hyyyb_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"lhb_yyb2stock_{time.time()}.xlsx"),index=False)
+    stock_lhb_hyyyb_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"lhb_yyb2stock_{datetime.today().strftime('%Y-%m-%d-%H-%M-%S')}.xlsx"),index=False)
     
     
     #对个股股票获取龙虎榜数据
@@ -260,11 +261,9 @@ def lhb_yyb_stock_daily_work(start_date="20240725", end_date="20240725",delete=T
                                             )
                         tx.create(real)
                 
-                
+             
             
             
-        
-
 
 if __name__ == "__main__":
     s = time.time()
@@ -298,8 +297,11 @@ if __name__ == "__main__":
     # print(stock_lhb_jgstatistic_em_df)
     # stock_lhb_jgstatistic_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
 
+    
+
+    
     ##构建营业部和股票的关系图
-    lhb_yyb_stock_daily_work(start_date="20240726", end_date="20240726")
+    lhb_yyb_stock_daily_work(start_date="20240729", end_date="20240729")
     
     
 

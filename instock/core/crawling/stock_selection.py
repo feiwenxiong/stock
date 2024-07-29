@@ -3,7 +3,14 @@
 
 import pandas as pd
 import requests
+import os 
+import sys
+cpath_current = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+print(cpath_current)
+# cpath = os.path.abspath(os.path.join(cpath_current, os.pardir))
+sys.path.append(cpath_current)
 import instock.core.tablestructure as tbs
+
 
 __author__ = 'myh '
 __date__ = '2023/5/9 '
@@ -75,5 +82,6 @@ def stock_selection_params():
 
 
 if __name__ == "__main__":
+    
     stock_selection_df = stock_selection()
-    print(stock_selection)
+    print(stock_selection_df)
