@@ -10,6 +10,7 @@ from py2neo import Node, Relationship, Path
 from datetime import datetime
 import json
 from instock.core.crawling.stock_selection import * 
+from utils import *
 
 #数据库链接密码
 NEO4J_PASSWORD = "root"
@@ -299,9 +300,9 @@ if __name__ == "__main__":
 
     
 
-    
+    date = getStrDate(1)
     ##构建营业部和股票的关系图
-    lhb_yyb_stock_daily_work(start_date="20240729", end_date="20240729")
+    lhb_yyb_stock_daily_work(start_date="20240730", end_date="20240730")
     
     
 
