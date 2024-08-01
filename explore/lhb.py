@@ -262,77 +262,62 @@ def lhb_yyb_stock_daily_work(start_date="20240725", end_date="20240725",delete=T
                                             )
                         tx.create(real)
                 
-             
+
+
+def yyb_stocks2stock_yybs(date_str,youzi_file):
+    '''
+     yz_data.columns = ["营业部名称","游资","风格"]
+     stock_lhb_hyyyb_em_df = stock_lhb_hyyyb_em_df[["营业部名称","买入股票"]]
+    '''
+    import akshare as ak
+    # for index, row in yyb_df.iterrows():   
+    #添加活跃营业部信息
+    stock_lhb_hyyyb_em_df = ak.stock_lhb_hyyyb_em(start_date=date_str, end_date=date_str)
+    stock_lhb_hyyyb_em_df = stock_lhb_hyyyb_em_df[["营业部名称","买入股票"]]
+    stock_lhb_hyyyb_em_df["买入股票"] = stock_lhb_hyyyb_em_df["买入股票"].apply(lambda x:x.strip().split())
+    # stock_lhb_hyyyb_em_df = stock_lhb_hyyyb_em_df.explode("买入股票")
+    
+    if 1:
+        #添加游资信息
+        import json
+        # file =os.path.join(cur_path, youzi_file)
+        with open(youzi_file,  encoding='utf-8') as f:
+            yz_data = json.load(f)
+        
+        yz_data = pd.DataFrame(yz_data)
+        yz_data.columns = ["营业部名称","游资","风格"]
+        # print(data)
+        stock_lhb_hyyyb_em_df =pd.merge(stock_lhb_hyyyb_em_df,
+                                        yz_data,
+                                        on="营业部名称",
+                                        how = "left")
+        # stock_lhb_hyyyb_em_df.drop(["营业部名称_y"],axis=1,inplace=True)
+    
+    new_data = []
+    for index, row in stock_lhb_hyyyb_em_df.iterrows():
+        # tmp_row = {}
+        stocks = row["买入股票"]
+        if stocks:
+            for stock in stocks:
+                new_data.append({"名称" : stock,
+                                "营业部名称" : row["营业部名称"],
+                                 "游资" : row["游资"],
+                                 "风格" : row["风格"],
+                                 })
+    stocks_yyb = pd.DataFrame(new_data)
+    
+    return stocks_yyb
             
             
 
 if __name__ == "__main__":
     s = time.time()
-    # stock_lhb_detail_em_df = stock_lhb_detail_em(
-    #     start_date="20240725", end_date="20240725"
-    # )
-    # stock_lhb_detail_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
-    # print(stock_lhb_detail_em_df)
-
-    # stock_lhb_stock_statistic_em_df = stock_lhb_stock_statistic_em(symbol="近一月")
-    # stock_lhb_stock_statistic_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
-    # print(stock_lhb_stock_statistic_em_df)
-
-    # stock_lhb_stock_statistic_em_df = stock_lhb_stock_statistic_em(symbol="近三月")
-    # print(stock_lhb_stock_statistic_em_df)
-    
-
-    # stock_lhb_stock_statistic_em_df = stock_lhb_stock_statistic_em(symbol="近六月")
-    # print(stock_lhb_stock_statistic_em_df)
-
-    # stock_lhb_stock_statistic_em_df = stock_lhb_stock_statistic_em(symbol="近一年")
-    # print(stock_lhb_stock_statistic_em_df)
-
-    # stock_lhb_jgmmtj_em_df = stock_lhb_jgmmtj_em(
-    #      start_date="20240725", end_date="20240725"
-    # )
-    # stock_lhb_jgmmtj_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
-    # # print(stock_lhb_jgmmtj_em_df)
-
-    # stock_lhb_jgstatistic_em_df = stock_lhb_jgstatistic_em(symbol="近一月")
-    # print(stock_lhb_jgstatistic_em_df)
-    # stock_lhb_jgstatistic_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
-
-    
-
     date = getStrDate(1)
     ##构建营业部和股票的关系图
-    lhb_yyb_stock_daily_work(start_date="20240730", end_date="20240730")
+    # lhb_yyb_stock_daily_work(start_date="20240731", end_date="20240731")
     
-    
-
-    # print(stock_lhb_hyyyb_em_df)
-    
-
-    # stock_lhb_yybph_em_df = stock_lhb_yybph_em(symbol="近一月")
-    # print(stock_lhb_yybph_em_df)
-    # stock_lhb_yybph_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
-
-    # stock_lhb_traderstatistic_em_df = stock_lhb_traderstatistic_em(symbol="近一月")
-    # print(stock_lhb_traderstatistic_em_df)
-    # stock_lhb_traderstatistic_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
-
-
-    # stock_lhb_stock_detail_date_em_df = stock_lhb_stock_detail_date_em(symbol="002901")
-    # print(stock_lhb_stock_detail_date_em_df)
-
-    # stock_lhb_stock_detail_em_df = stock_lhb_stock_detail_em(
-        # symbol="002901", date="20221012", flag="买入"
-    # )
-    # stock_lhb_stock_detail_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
-    # print(stock_lhb_stock_detail_em_df)
-    
-
-    # stock_lhb_stock_detail_em_df = stock_lhb_stock_detail_em(
-    #     symbol="600611", date="20240725", flag="卖出"
-    # )
-    # # print(stock_lhb_stock_detail_em_df)
-    # stock_lhb_stock_detail_em_df.to_excel(os.path.join(os.path.dirname(__file__), f"{time.time()}.xlsx"),index=False)
-
-
+    youzi_file = os.path.join(os.path.dirname(__file__),"swim_cash3.json")
+    stock2yyb = yyb_stocks2stock_yybs("20240801",youzi_file)
+    # print(stock2yyb)
+    stock2yyb.to_excel(os.path.join(os.path.dirname(__file__) ,"send", f"营业部游资_{datetime.today().strftime('%Y-%m-%d-%H-%M-%S')}.xlsx"))
     print(f"it cost: {time.time() - s} seconds.")

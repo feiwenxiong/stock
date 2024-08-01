@@ -1,3 +1,7 @@
+import os
+import sys
+cpath_current = os.path.dirname(os.path.dirname(__file__))
+sys.path.append(cpath_current)
 import akshare as ak
 from utils import *
 import requests as rq
@@ -6,8 +10,7 @@ import pandas as pd
 from datetime import timedelta
 from hot_stock import *
 import time
-
-
+from lhb import yyb_stocks2stock_yybs 
 
 class Continuous_limit_up(DataClass):
     
@@ -45,7 +48,6 @@ class Continuous_limit_up(DataClass):
         
         return data["info"]
         
-
 class LimitUpPool(DataClass):
     '''获取涨停的股票池
     '''
@@ -186,7 +188,6 @@ class BlockTop(DataClass):
 
         return df
 
-
 # def limit_up_pool(date,save=True):
 #     params = {
 #     "page": 1,
@@ -246,8 +247,10 @@ class BlockTop(DataClass):
 #     # print(res)
 #     return info_df_cn,limit_up_count,limit_down_count
 
-
 def today_limit_up_pool_detail(save=True):
+    '''
+    融合选股信息和涨停信息
+    '''
     date = getStrDate(1)
     #涨停板数据简报
     limig_up_pool_df = LimitUpPool().get_data_df_fcb(date,save=False)
@@ -258,43 +261,71 @@ def today_limit_up_pool_detail(save=True):
     limit_up_detail = pd.merge(limig_up_pool_df,stock_selection_df,on=["代码","名称"],how="left",suffixes=("","_y"))
     limit_up_detail.drop(["换手率_y","成交量_y"],axis=1,inplace=True)
     if save:
-        save_file = os.path.join(os.path.dirname(__file__) , f"limit_up_pool_detail_{datetime.today().strftime('%Y-%m-%d-%H-%M-%S')}.xlsx")
+        save_file = os.path.join(os.path.dirname(__file__) ,"send", f"limit_up_pool_detail_{datetime.today().strftime('%Y-%m-%d-%H-%M-%S')}.xlsx")
         limit_up_detail.to_excel(save_file)
     return limit_up_detail
 
- 
+def today_limit_up_pool_detail_in_longhubang(save=True):
+    '''
+    一般是大盘结束运行后一个小时运行
+    '''
+    from instock.lib.trade_time import get_trade_date_last
+    date,_ = get_trade_date_last()
+    date_str = date.strftime("%Y%m%d")
+    stock_lhb_detail_em_df = ak.stock_lhb_detail_em(start_date=date_str, end_date=date_str)
+    #lhb机构席位数
+    stock_lhb_jgmmtj_em_df = ak.stock_lhb_jgmmtj_em(start_date=date_str, end_date=date_str)
+    stock_lhb_jgmmtj_em_df_columns = ['代码', '名称','买方机构数', '卖方机构数','机构买入总额', '机构卖出总额','机构买入净额', '市场总成交额', '机构净买额占总成交额比']
+    stock_lhb_jgmmtj_em_df = stock_lhb_jgmmtj_em_df[stock_lhb_jgmmtj_em_df_columns]
+    #merge ->[个股 - 机构数]
+    stock_lhb_detail_em_df = pd.merge(stock_lhb_detail_em_df,stock_lhb_jgmmtj_em_df,on=["代码","名称"],how="left",suffixes=("","_y"))
+    youzi_file = os.path.join(os.path.dirname(__file__),"swim_cash3.json")
+    #添加营业部和游资信息
+    stock2yyb = yyb_stocks2stock_yybs(date_str,youzi_file)
+    stock_lhb_detail_em_df_yyb = pd.merge(stock_lhb_detail_em_df,
+                                        stock2yyb,
+                                        on="名称",
+                                        how="left",
+                                        suffixes=("","_y"))
+    # stock_lhb_detail_em_df_yyb.drop(["名称_y"],inplace=True)
+    
+    
+    ######################################################################
+
+    #具体人气等信息
+    limit_up_detail = today_limit_up_pool_detail(save=False)
+    limit_up_detail = pd.merge(limit_up_detail,stock_lhb_detail_em_df_yyb,on=["代码","名称"],how="left",suffixes=("","_y"))
+    limit_up_detail.drop(["流通市值_y","换手率_y","涨跌幅_y"],axis=1,inplace=True)
+  
+    # #再merge
+    # limit_up_lhb = pd.merge(limit_up_lhb,stock_lhb_jgmmtj_em_df,on=["代码","名称"],how="left",suffixes=("","_y"))
+    
+    if save:
+        save_file = os.path.join(os.path.dirname(__file__) ,"send", f"limit_up_pool_detail+lhb+yyb_{datetime.today().strftime('%Y-%m-%d-%H-%M-%S')}.xlsx")
+        limit_up_detail.to_excel(save_file)
+    
+    return limit_up_detail,stock_lhb_detail_em_df_yyb
+    
+
+
 if __name__ == "__main__":
-    # s = time.time()
-    
-    
-    # date = getStrDate(1)
-    # # Continuous_limit_up().get_data_df("20240730",0)
-    # # block_top("20240730",1)
-    # # BlockTop().get_data_df("20240730",1)
-    # # date = "20240730"
-    # #涨停板数据简报
-    # limig_up_pool_df = LimitUpPool().get_data_df_fcb(date,save=False)
-    # #全部股票详报
-    # # stock_selection_df = getTodayStock(save=False)
+    cur_path = os.path.abspath(os.path.dirname(__file__))
+    print(cur_path)
+    time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
+    # try:
+    #     time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
+    # except Exception as e:
+    #     print(e)
+    #     time_diplayer(today_limit_up_pool_detail,save=True) 
+        
+    # stock_lhb_detail_daily_sina_df = ak.stock_lhb_detail_em(start_date="20240801",end_date="20240801")
+    # print(stock_lhb_detail_daily_sina_df)
 
-    # stock_selection_df =getTodayStock,save=False
-    # #涨停股票详报
-    # limit_up_detail = pd.merge(limig_up_pool_df,stock_selection_df,on=["代码","名称"],how="left",suffixes=("","_y"))
-    # limit_up_detail.drop(["换手率_y","成交量_y"],axis=1,inplace=True)
-    # save_file = os.path.join(os.path.dirname(__file__) , f"limit_up_pool_detail_{datetime.today().strftime('%Y-%m-%d-%H-%M-%S')}.xlsx")
-    # limit_up_detail.to_excel(save_file)
     
+    # import akshare as ak
+    # stock_lhb_jgmmtj_em_df = ak.stock_lhb_jgmmtj_em(start_date="20240417", end_date="20240430")
+    # stock_lhb_jgmmtj_em_df_columns = ['代码', '名称','买方机构数', '卖方机构数','机构买入总额', '机构卖出总额','机构买入净额', '市场总成交额', '机构净买额占总成交额比']
+    # stock_lhb_jgmmtj_em_df[stock_lhb_jgmmtj_em_df_columns]
+    # print(stock_lhb_jgmmtj_em_df.columns)
     
-    
-    # # import akshare as ak
-    # # stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol="000001", period="daily", start_date="20170301", end_date='20240528', adjust="qfq")
-    # # print(stock_zh_a_hist_df)
-    
-    
-    # # stock_zt_pool_em_df = ak.stock_zt_pool_em(date=date)
-    # # print(stock_zt_pool_em_df)
-    # # print("\ncost: ",time.time() -s )
-    
-    time_diplayer(today_limit_up_pool_detail,save=True)
-
     

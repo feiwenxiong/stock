@@ -9,10 +9,7 @@ import numpy as np
 from datetime import datetime
 import instock.core.tablestructure as tbs
 import akshare as ak
-
 # import akshare as ak
-
-
 def getTodayStock(save=True) -> pd.DataFrame:
     '''
     获取股吧人气榜等数据
@@ -26,8 +23,6 @@ def getTodayStock(save=True) -> pd.DataFrame:
     if save:
         stock_selection_df.to_excel(save_file, index=False)
     return stock_selection_df
-
-
 
 def earn_money_xiaoying():
     '''return format:
@@ -51,9 +46,10 @@ def earn_money_xiaoying():
     return stock_market_activity_legu_df
 
 
-
 if __name__ == "__main__":
     # stock_selection_df = getTodayStock()
+    
+    
     #赚钱效应
     emx = earn_money_xiaoying()
     print(emx)
