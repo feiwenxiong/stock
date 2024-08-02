@@ -317,7 +317,7 @@ if __name__ == "__main__":
     # lhb_yyb_stock_daily_work(start_date="20240731", end_date="20240731")
     
     youzi_file = os.path.join(os.path.dirname(__file__),"swim_cash3.json")
-    stock2yyb = yyb_stocks2stock_yybs("20240801",youzi_file)
+    stock2yyb = yyb_stocks2stock_yybs("20240802",youzi_file)
     # print(stock2yyb)
     stock2yyb.to_excel(os.path.join(os.path.dirname(__file__) ,"send", f"营业部游资_{datetime.today().strftime('%Y-%m-%d-%H-%M-%S')}.xlsx"))
     print(f"it cost: {time.time() - s} seconds.")
