@@ -46,6 +46,29 @@ def earn_money_xiaoying():
     return stock_market_activity_legu_df
 
 
+
+def kongpan_attention():
+    from ATTENTION import ATTENTION
+    from utils import get_code_name
+    
+    code_name_df,spot_df = get_code_name()
+    
+    data = pd.DataFrame()
+    data["代码"] = ATTENTION
+    
+    trend = []
+    for code in ATTENTION:
+        stock_comment_detail_zlkp_jgcyd_em_df = ak.stock_comment_detail_zlkp_jgcyd_em(symbol=code)
+        trend.append(stock_comment_detail_zlkp_jgcyd_em_df["value"].tolist())
+    
+    data["近来控盘比例趋势"] = trend
+
+    data = pd.merge(data,spot_df,left_on="代码",right_on="代码",how="left")
+    # data.drop("")
+    # print(data)
+    return data
+
+
 if __name__ == "__main__":
     # stock_selection_df = getTodayStock()
     
@@ -53,11 +76,53 @@ if __name__ == "__main__":
     #赚钱效应
     emx = earn_money_xiaoying()
     print(emx)
+    
     #人气排名
     stock_hot_rank_em_df = ak.stock_hot_rank_em()
     print(stock_hot_rank_em_df)
     
+    
     #飙升榜
     stock_hot_up_em_df = ak.stock_hot_up_em()
     print(stock_hot_up_em_df)
+    
+    
+    #千人千评
+    # stock_comment_em_df = ak.stock_comment_em()
+    # print(stock_comment_em_df)
+    
+    
+    
+    
+    #主力控盘
+    # stocks = ["000957"，""]
+    # from ATTENTION import ATTENTION
+    # from utils import get_code_name
+    
+    # code_name_df,spot_df = get_code_name()
+    
+    # data = pd.DataFrame()
+    # data["code"] = ATTENTION
+    
+    # trend = []
+    # for code in ATTENTION:
+    #     stock_comment_detail_zlkp_jgcyd_em_df = ak.stock_comment_detail_zlkp_jgcyd_em(symbol=code)
+    #     trend.append(stock_comment_detail_zlkp_jgcyd_em_df["value"])
+    
+    # data["近来控盘比例趋势"] = trend
+
+    # data = pd.merge(data,spot_df,left_on="code",right_on="代码",how="left")
+    # print(data)
+    
+    data = kongpan_attention()
+    print(data)
+        # print(stock_comment_detail_zlkp_jgcyd_em_df)
+        # from matplotlib import pyplot as plt
+        # plt.scatter(stock_comment_detail_zlkp_jgcyd_em_df["date"],stock_comment_detail_zlkp_jgcyd_em_df["value"])
+        # plt.title("hah")
+        # plt.grid()
+        # plt.show()
+    
+   
+    
     

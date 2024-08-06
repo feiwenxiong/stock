@@ -8,6 +8,7 @@ import os
 import time
 import akshare as ak
 from hot_stock import *
+from tabulate import tabulate
 #os.system("sudo mount -a")
 # def mail(t,recipients,fileName):
 #     ret=True
@@ -25,18 +26,37 @@ from hot_stock import *
 #     return ret
 
 
-def mail(t, recipients, folder_path=None, xlsx_file=None):
+from tabulate import tabulate
+
+def mail(t, recipients, folder_path=None, xlsx_file=None, df=None):
     ret = True
     try:
         # 创建MIME多部分消息对象
-        msg = MIMEMultipart()
+        msg = MIMEMultipart("alternative")
         msg['From'] = formataddr(["Jack", my_sender])          # 发件人邮箱昵称、发件人邮箱账号
         msg['To'] = ', '.join(formataddr(["Recipient", r]) for r in recipients)  # 收件人邮箱昵称、收件人邮箱账号
         msg['Subject'] = "instock system daily report"         # 邮件的主题
 
         # 总是添加纯文本内容
-        text_part = MIMEText(t, 'plain', 'utf-8')
-        msg.attach(text_part)
+        # text_part = MIMEText(t, 'plain', 'utf-8')
+        # msg.attach(text_part)
+
+        # 如果提供了数据，则创建一个DataFrame并转换为HTML表格
+        if df is not None:
+            # df = pd.DataFrame(data)
+            html_content = df.to_html(index=False)
+            # 创建HTML部分
+            html_part = f"""
+            <html>
+              <body>
+                <p>{t}</p>
+                <br>
+                {html_content}
+              </body>
+            </html>
+            """
+            part = MIMEText(html_part, 'html', 'utf-8')
+            msg.attach(part)
 
         # 如果提供了文件夹路径，则添加该路径下所有的.xlsx附件
         if folder_path:
@@ -72,17 +92,25 @@ if __name__ == "__main__":
     my_sender='feiwenxiong@foxmail.com'  # 自己的邮箱账号
     my_pass = 'yigznphogjsnbiea'   # 发件人邮箱密码(之前获取的授权码)
     recipients = [my_sender,"xzliao96@163.com"]
+   
     
+   #######################################################################################
+    #添加附件
     send_folder = os.path.join(os.path.abspath(os.path.dirname(__file__)),"send")
     
-   #################
+   #添加text
     emx = earn_money_xiaoying()
     # print(emx)
     t = str(emx)
     
-    #############################
+    #添加表格
+    from hot_stock import kongpan_attention
+    df = kongpan_attention()
     
-    ret=mail(t,recipients,folder_path=send_folder)
+    
+    #######################################################################################
+    
+    ret = mail(t,recipients,folder_path=send_folder,df=df)
     if ret:
         print("发送邮件成功")
     else:

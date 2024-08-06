@@ -67,6 +67,17 @@ def time_diplayer(func, *args, **kwargs):
 
 
     
+def get_code_name():
+    import akshare as ak
+    # 获取所有 A 股股票的实时行情数据
+    stock_zh_a_spot_em = ak.stock_zh_a_spot_em()
+
+    # 提取代码和名称列
+    df = stock_zh_a_spot_em[["代码", "名称"]]
+
+    # 重命名列
+    df.columns = ["code", "name"]  
+    return df,stock_zh_a_spot_em
     
 
 
