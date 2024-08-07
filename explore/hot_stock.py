@@ -25,7 +25,8 @@ def getTodayStock(save=True) -> pd.DataFrame:
     return stock_selection_df
 
 def earn_money_xiaoying():
-    '''return format:
+    '''赚钱效应
+    return format:
                         item                value
             0         上涨               1198.0
             1         涨停                 26.0
@@ -43,11 +44,14 @@ def earn_money_xiaoying():
     import akshare as ak
     stock_market_activity_legu_df = ak.stock_market_activity_legu()
     # print(stock_market_activity_legu_df) 
-    return stock_market_activity_legu_df
-
-
+    stock_market_activity_legu_df.index = stock_market_activity_legu_df["item"]
+    stock_market_activity_legu_df.drop("item",axis=1,inplace=True)
+    return stock_market_activity_legu_df.T
 
 def kongpan_attention():
+    '''筛选关注文件中的股票的最近的控盘率走势
+    '''
+    
     from ATTENTION import ATTENTION
     from utils import get_code_name
     
@@ -59,69 +63,69 @@ def kongpan_attention():
     trend = []
     for code in ATTENTION:
         stock_comment_detail_zlkp_jgcyd_em_df = ak.stock_comment_detail_zlkp_jgcyd_em(symbol=code)
-        trend.append(stock_comment_detail_zlkp_jgcyd_em_df["value"].tolist())
+        trend.append([round(x,2) for x in stock_comment_detail_zlkp_jgcyd_em_df["value"].tolist()])
     
     data["近来控盘比例趋势"] = trend
-
+    # data["近来控盘比例趋势"].apply(lambda x:round(x,2))
     data = pd.merge(data,spot_df,left_on="代码",right_on="代码",how="left")
     # data.drop("")
     # print(data)
+    # data[""]
     return data
 
 
+
+
 if __name__ == "__main__":
-    # stock_selection_df = getTodayStock()
     
     
+    
+    df_dict = {}
     #赚钱效应
     emx = earn_money_xiaoying()
     print(emx)
+    df_dict["赚钱效应"] = emx
     
     #人气排名
     stock_hot_rank_em_df = ak.stock_hot_rank_em()
     print(stock_hot_rank_em_df)
-    
+    df_dict["人气排名"] = stock_hot_rank_em_df
     
     #飙升榜
     stock_hot_up_em_df = ak.stock_hot_up_em()
     print(stock_hot_up_em_df)
-    
+    df_dict["飙升榜"] = stock_hot_up_em_df
     
     #千人千评
     # stock_comment_em_df = ak.stock_comment_em()
     # print(stock_comment_em_df)
+        #抱团
+    df_dict = {}
+    import akshare as ak
+    stock_lh_yyb_control_df = ak.stock_lh_yyb_control()
+    print(stock_lh_yyb_control_df)
+    df_dict["抱团营业部"] = stock_lh_yyb_control_df
     
     
     
-    
-    #主力控盘
-    # stocks = ["000957"，""]
-    # from ATTENTION import ATTENTION
-    # from utils import get_code_name
-    
-    # code_name_df,spot_df = get_code_name()
-    
-    # data = pd.DataFrame()
-    # data["code"] = ATTENTION
-    
-    # trend = []
-    # for code in ATTENTION:
-    #     stock_comment_detail_zlkp_jgcyd_em_df = ak.stock_comment_detail_zlkp_jgcyd_em(symbol=code)
-    #     trend.append(stock_comment_detail_zlkp_jgcyd_em_df["value"])
-    
-    # data["近来控盘比例趋势"] = trend
-
-    # data = pd.merge(data,spot_df,left_on="code",right_on="代码",how="left")
-    # print(data)
     
     data = kongpan_attention()
     print(data)
-        # print(stock_comment_detail_zlkp_jgcyd_em_df)
-        # from matplotlib import pyplot as plt
-        # plt.scatter(stock_comment_detail_zlkp_jgcyd_em_df["date"],stock_comment_detail_zlkp_jgcyd_em_df["value"])
-        # plt.title("hah")
-        # plt.grid()
-        # plt.show()
+    stock_selection_df = getTodayStock(save=False)
+    data = pd.merge(data[["代码","近来控盘比例趋势"]],
+                    stock_selection_df,
+                    left_on="代码",
+                    right_on="代码",
+                    how="left")
+    df_dict["主力控盘-关注"] = data
+    
+    # from utils import add_charts
+    # add_charts(data)
+    
+    #
+    from utils import merge_df_files
+    merge_df_files(df_dict,"市场热点+个人关注控盘")
+
     
    
     

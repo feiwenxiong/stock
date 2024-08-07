@@ -322,3 +322,5 @@ if __name__ == "__main__":
     # print(stock2yyb)
     stock2yyb.to_excel(os.path.join(os.path.dirname(__file__) ,"send", f"营业部游资_{datetime.today().strftime('%Y-%m-%d-%H-%M-%S')}.xlsx"))
     print(f"it cost: {time.time() - s} seconds.")
+    
+    
