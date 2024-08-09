@@ -100,7 +100,7 @@ if __name__ == "__main__":
     # stock_comment_em_df = ak.stock_comment_em()
     # print(stock_comment_em_df)
         #抱团
-    df_dict = {}
+    # df_dict = {}
     import akshare as ak
     stock_lh_yyb_control_df = ak.stock_lh_yyb_control()
     print(stock_lh_yyb_control_df)

@@ -6,7 +6,8 @@ import time
 import os
 import glob
 import pandas as pd
-
+import akshare as ak
+from matplotlib import pyplot as plt
 # import time
 # import threading
 
@@ -177,6 +178,151 @@ def add_charts(df):
     wb.save(output_file)
 
 
-# if __name__ == "__main__":
-#     add_charts(r"C:\Users\Feiwen.Xiong\Desktop\extraPrograms\stock\市场热点+个人关注控盘_2024-08-07.xlsx",
-#                )
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    
+    def kongpan_attention_kline_data():
+        from ATTENTION import ATTENTION
+        from utils import get_code_name
+        code_name_df,spot_df = get_code_name()
+        data = pd.DataFrame()
+        data["代码"] = ATTENTION
+        dfs = []
+        for code in ATTENTION:
+            stock_comment_detail_zlkp_jgcyd_em_df = ak.stock_comment_detail_zlkp_jgcyd_em(symbol=code)
+            tmp_date = stock_comment_detail_zlkp_jgcyd_em_df["date"].map(lambda x:datetime.strftime(x,"%Y%m%d"))
+            start_date = tmp_date[0]
+            end_date = tmp_date.tolist()[-1]
+            stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code, 
+                                                    period="daily", 
+                                                    start_date=start_date, 
+                                                    end_date=end_date, 
+                                                    adjust="qfq")
+            stock_comment_detail_zlkp_jgcyd_em_df.rename(columns={"value":"近来控盘比例趋势","date":"日期"},inplace=True)
+            df = pd.merge(stock_zh_a_hist_df,stock_comment_detail_zlkp_jgcyd_em_df,on="日期")
+            name = code_name_df[code_name_df["code"]==code]["name"].tolist()[0]
+            df["名称"] = name
+            # print(df)
+            # trend.append([round(x,2) for x in stock_comment_detail_zlkp_jgcyd_em_df["value"].tolist()])
+            dfs.append(df.copy())
+        return dfs
+    
+    if not os.path.exists('trends'):
+            os.makedirs('trends')
+    
+    import mplfinance as mpf
+    dfs = kongpan_attention_kline_data()
+    for df in dfs:
+        # 修改列名
+        df = df.rename(
+            {
+                "日期": "Date",
+                "开盘": "Open",
+                "收盘": "Close",
+                "最低": "Low",
+                "最高": "High",
+                "成交量": "Volume",
+            },
+            axis=1,
+        )
+
+        # 将 Date 列设为索引
+        df.index = df["Date"].astype("datetime64[ns]")
+        df = df.sort_index()
+        name = df["名称"].tolist()[0]
+        #plot
+        mc = mpf.make_marketcolors(up='red',down='green',  volume={'up':'red','down':'green'})
+        style = mpf.make_mpf_style(rc={'font.family': 'SimHei'},
+                                    base_mpf_style= 'yahoo',
+                                    marketcolors=mc)
+        # 计算移动平均线
+        df['MA5'] = df['Close'].rolling(window=5).mean()
+        df['MA10'] = df['Close'].rolling(window=10).mean()
+        df['MA20'] = df['Close'].rolling(window=20).mean()
+        
+        #最高最低3点
+        # 找出最低和最高的3个点
+        lowest_points = df.nsmallest(3, '近来控盘比例趋势')
+        highest_points = df.nlargest(3, '近来控盘比例趋势')
+
+        # 准备散点数据
+        scatter_lowest = lowest_points[['Date', '近来控盘比例趋势']]
+        scatter_highest = highest_points[['Date', '近来控盘比例趋势']]
+        
+        
+        
+        addplots = [
+                    mpf.make_addplot(df["近来控盘比例趋势"], 
+                                    color="b", 
+                                    width=1,
+                                    ylabel="control trend",
+                                    panel=2),
+                    mpf.make_addplot(df['MA5'], color='blue', width=1, type='line',),
+                    mpf.make_addplot(df['MA10'], color='orange', width=1, type='line'),
+                    mpf.make_addplot(df['MA20'], color='green', width=1, type='line',),
+                    
+                    
+                    
+                    
+                    
+                    ]
+        title = f'{name}-{datetime.now().strftime("%Y%m%d")}'
+        kwargs = dict(
+                    type='candle',
+                    volume = True,
+                    # mav=(5,10,20),
+                    scale_width_adjustment = dict(volume=0.5, candle=1.15,lines=0.65),
+                    datetime_format='%m%d',
+                    xrotation=15,
+                    title=title,
+                    ylabel='price',
+                    ylabel_lower='volume\n',
+                    style = style,
+                    addplot=addplots,
+                    
+                )
+
+        fig,axes = mpf.plot(df,returnfig=True,**kwargs)
+        # for ax in axes:
+        #     print(ax.get_title())
+        # 为移动平均线添加图例
+        lines = [plt.Line2D([0], [0], color=color, lw=2) for color in ['blue', 'orange', 'green']]
+        labels = ['MA5', 'MA10', 'MA20']
+        axes[0].legend(lines, labels, loc='lower left')
+        
+        
+        
+        # id_ = 4
+        # # 绘制最低点和最高点
+        # for idx, row in scatter_lowest.iterrows():
+        #     date = row['Date'].strftime('%m%d')
+        #     value = row['近来控盘比例趋势']
+        #     axes[id_].scatter(date, value, color='red', marker='x', s=5)
+        #     axes[id_].annotate(f'{value:.2f}', (date, value), textcoords="offset points", xytext=(0,1), ha='center')
+
+        # for idx, row in scatter_highest.iterrows():
+        #     date = row['Date'].strftime('%m%d')
+        #     value = row['近来控盘比例趋势']
+        #     axes[id_].scatter(date, value, color='green', marker='o', s=5)
+        #     axes[id_].annotate(f'{value:.2f}', (date, value), textcoords="offset points", xytext=(0,-1), ha='center')
+
+                
+        
+        
+        
+        
+        
+        
+        
+        fig.savefig(f'trends/{title}.svg',format="svg")
+        
+        
+        # mpf.show()
+
+

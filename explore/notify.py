@@ -67,6 +67,13 @@ def mail(t, recipients, folder_path=None, xlsx_file=None, df=None):
                         xlsx_part = MIMEApplication(file.read(), Name=filename)
                         xlsx_part['Content-Disposition'] = f'attachment; filename="{filename}"'
                         msg.attach(xlsx_part)
+                elif  filename.endswith('.svg'):
+                    filepath = os.path.join(folder_path, filename)
+                    with open(filepath, "rb") as file:
+                        svg_part = MIMEApplication(file.read(), Name=filename)
+                        svg_part['Content-Disposition'] = f'attachment; filename="{filename}"'
+                        msg.attach(svg_part)
+
 
         # 如果提供了单个xlsx文件路径，则添加xlsx附件
         elif xlsx_file:
