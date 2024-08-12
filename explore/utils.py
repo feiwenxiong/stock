@@ -235,8 +235,11 @@ if __name__ == "__main__":
         # 将 Date 列设为索引
         df.index = df["Date"].astype("datetime64[ns]")
         df = df.sort_index()
+        # df.set_index('Date', inplace=True)
+        # 确保索引是 DatetimeIndex 类型
+        # df.index = pd.DatetimeIndex(df.index)
         name = df["名称"].tolist()[0]
-        #plot
+        #plot style
         mc = mpf.make_marketcolors(up='red',down='green',  volume={'up':'red','down':'green'})
         style = mpf.make_mpf_style(rc={'font.family': 'SimHei'},
                                     base_mpf_style= 'yahoo',
@@ -246,83 +249,118 @@ if __name__ == "__main__":
         df['MA10'] = df['Close'].rolling(window=10).mean()
         df['MA20'] = df['Close'].rolling(window=20).mean()
         
-        #最高最低3点
-        # 找出最低和最高的3个点
-        lowest_points = df.nsmallest(3, '近来控盘比例趋势')
-        highest_points = df.nlargest(3, '近来控盘比例趋势')
 
-        # 准备散点数据
-        scatter_lowest = lowest_points[['Date', '近来控盘比例趋势']]
-        scatter_highest = highest_points[['Date', '近来控盘比例趋势']]
-        
+        df["mean_kp"] =  df["近来控盘比例趋势"].mean() 
+        df["std_kp"] =  df["近来控盘比例趋势"].std() 
+        df["lowbound_kp"] = df["mean_kp"] - 3 * df["std_kp"]
+        df["upperbound_kp"] = df["mean_kp"] + 3 * df["std_kp"]
         
         
         addplots = [
                     mpf.make_addplot(df["近来控盘比例趋势"], 
                                     color="b", 
                                     width=1,
-                                    ylabel="control trend",
-                                    panel=2),
-                    mpf.make_addplot(df['MA5'], color='blue', width=1, type='line',),
-                    mpf.make_addplot(df['MA10'], color='orange', width=1, type='line'),
-                    mpf.make_addplot(df['MA20'], color='green', width=1, type='line',),
+                                    ylabel=" control trend ",
+                                    y_on_right=True,
+                                    panel=2,
+                                    type="line",
+                                    secondary_y=True,
+                                    ),
+                    
+                    mpf.make_addplot(df["mean_kp"] , 
+                                    color="b", 
+                                    width=1,
+                                    # ylabel=" control trend ",
+                                    panel=2,
+                                    type="line",
+                                    # scatter=True,
+                                    linestyle="dashed",
+                                    # secondary_y=True,
+                                    ),
+                     mpf.make_addplot(df["lowbound_kp"], 
+                                    color="green", 
+                                    width=1,
+                                    # ylabel=" control trend ",
+                                    panel=2,
+                                    type="line",
+                                    # scatter=True,
+                                    linestyle="dashed",
+                                    # secondary_y=True,
+                                    ),
+                      mpf.make_addplot(df["upperbound_kp"], 
+                                    color="red", 
+                                    width=1,
+                                    # ylabel=" control trend ",
+                                    panel=2,
+                                    type="line",
+                                    # scatter=True,
+                                    linestyle="dashed",
+                                    # secondary_y=True,
+                                    ),
                     
                     
-                    
-                    
-                    
-                    ]
+                    # mpf.make_addplot(df['MA5'], color='blue', width=1, type='line',),
+                    # mpf.make_addplot(df['MA10'], color='orange', width=1, type='line'),
+                    # mpf.make_addplot(df['MA20'], color='green', width=1, type='line',),
+
+                    ] 
+        
         title = f'{name}-{datetime.now().strftime("%Y%m%d")}'
         kwargs = dict(
                     type='candle',
                     volume = True,
-                    # mav=(5,10,20),
+                    mav=(5,10,20),
                     scale_width_adjustment = dict(volume=0.5, candle=1.15,lines=0.65),
                     datetime_format='%m%d',
-                    xrotation=15,
+                    xrotation=90,
                     title=title,
                     ylabel='price',
-                    ylabel_lower='volume\n',
+                    ylabel_lower='volume',
                     style = style,
                     addplot=addplots,
+                    tight_layout=True,
+                    figratio=(10, 8),
+                    figscale=1.,
                     
                 )
-
+        # fig, axes = plt.subplots(nrows=3, ncols=1, figsize=(10, 8))
         fig,axes = mpf.plot(df,returnfig=True,**kwargs)
-        # for ax in axes:
-        #     print(ax.get_title())
-        # 为移动平均线添加图例
+        
+        #定制一下
         lines = [plt.Line2D([0], [0], color=color, lw=2) for color in ['blue', 'orange', 'green']]
         labels = ['MA5', 'MA10', 'MA20']
-        axes[0].legend(lines, labels, loc='lower left')
+        axes[0].legend(lines, labels, loc='upper left')
         
         
+        #最高最低3点
+        # 找出最低和最高的3个点
+        lowest_points = df.nsmallest(3, '近来控盘比例趋势')
+        highest_points = df.nlargest(3, '近来控盘比例趋势')
+        # 准备散点数据
+        scatter_lowest = lowest_points[['近来控盘比例趋势']]
+        scatter_highest = highest_points[['近来控盘比例趋势']]
         
-        # id_ = 4
-        # # 绘制最低点和最高点
-        # for idx, row in scatter_lowest.iterrows():
-        #     date = row['Date'].strftime('%m%d')
-        #     value = row['近来控盘比例趋势']
-        #     axes[id_].scatter(date, value, color='red', marker='x', s=5)
-        #     axes[id_].annotate(f'{value:.2f}', (date, value), textcoords="offset points", xytext=(0,1), ha='center')
-
-        # for idx, row in scatter_highest.iterrows():
-        #     date = row['Date'].strftime('%m%d')
-        #     value = row['近来控盘比例趋势']
-        #     axes[id_].scatter(date, value, color='green', marker='o', s=5)
-        #     axes[id_].annotate(f'{value:.2f}', (date, value), textcoords="offset points", xytext=(0,-1), ha='center')
+       
+        id_ = 5  # The index of the panel where control trend is plotted
+        axes[id_].scatter(df.index.strftime('%m%d'),df["近来控盘比例趋势"],color="b",marker="o",s=2)
+        axes[id_].scatter(scatter_lowest.index.strftime('%m%d'),scatter_lowest["近来控盘比例趋势"],color="green",marker="s",s=10)
+        axes[id_].scatter(scatter_highest.index.strftime('%m%d'),scatter_highest["近来控盘比例趋势"],color="red",marker="s",s=10)
+        
+        for idx, row in scatter_lowest.iterrows():
+            date = idx.strftime('%m%d')
+            value = row['近来控盘比例趋势']
+            axes[id_].annotate(f'{value:.2f}%', (date, value), textcoords="offset points", xytext=(5, 10), ha='center')
+        for idx, row in scatter_highest.iterrows():
+            date = idx.strftime('%m%d')
+            value = row['近来控盘比例趋势']
+            axes[id_].annotate(f'{value:.2f}%', (date, value), textcoords="offset points", xytext=(5, -10), ha='center')
 
                 
         
-        
-        
-        
-        
-        
-        
-        fig.savefig(f'trends/{title}.svg',format="svg")
+        fig.savefig(f'trends/{title}.png',format="png")
         
         
         # mpf.show()
+        # pass
 
 
