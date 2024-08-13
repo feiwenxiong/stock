@@ -121,6 +121,8 @@ def merge_df_files(df_dict,prefix):
 
 
 def add_charts(df):
+    '''添加图片到excel中
+    '''
     import pandas as pd
     import matplotlib.pyplot as plt
     from openpyxl import Workbook,load_workbook
@@ -179,14 +181,14 @@ def add_charts(df):
 
 
 
-
-
-
-
-
-
-if __name__ == "__main__":
-    
+def attention_kongpan():
+    import mplfinance as mpf
+    from tqdm import tqdm
+    import matplotlib.pyplot as plt
+    import warnings
+    warnings.filterwarnings("ignore")
+    plt.rcParams['font.sans-serif']=['MicroSoft YaHei'] #用来正常显示中文标签
+    plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
     def kongpan_attention_kline_data():
         from ATTENTION import ATTENTION
         from utils import get_code_name
@@ -216,9 +218,10 @@ if __name__ == "__main__":
     if not os.path.exists('trends'):
             os.makedirs('trends')
     
-    import mplfinance as mpf
+    
     dfs = kongpan_attention_kline_data()
-    for df in dfs:
+    
+    for df in tqdm(dfs):
         # 修改列名
         df = df.rename(
             {
@@ -264,7 +267,7 @@ if __name__ == "__main__":
                                     y_on_right=True,
                                     panel=2,
                                     type="line",
-                                    secondary_y=True,
+                                    # secondary_y=True,
                                     ),
                     
                     mpf.make_addplot(df["mean_kp"] , 
@@ -302,10 +305,22 @@ if __name__ == "__main__":
                     # mpf.make_addplot(df['MA5'], color='blue', width=1, type='line',),
                     # mpf.make_addplot(df['MA10'], color='orange', width=1, type='line'),
                     # mpf.make_addplot(df['MA20'], color='green', width=1, type='line',),
+                    
+                    
+                    # mpf.make_addplot(df["upperbound_kp"], 
+                    #                 color="red", 
+                    #                 width=1,
+                    #                 # ylabel=" control trend ",
+                    #                 panel=3,
+                    #                 type="line",
+                    #                 # scatter=True,
+                    #                 linestyle="dashed",
+                    #                 # secondary_y=True,
+                    #                 ),
 
                     ] 
         
-        title = f'{name}-{datetime.now().strftime("%Y%m%d")}'
+        title = f'{name}_{datetime.now().strftime("%Y%m%d")}'
         kwargs = dict(
                     type='candle',
                     volume = True,
@@ -318,8 +333,8 @@ if __name__ == "__main__":
                     ylabel_lower='volume',
                     style = style,
                     addplot=addplots,
-                    tight_layout=True,
-                    figratio=(10, 8),
+                    # tight_layout=True,
+                    figratio=(14, 8),
                     figscale=1.,
                     
                 )
@@ -341,7 +356,7 @@ if __name__ == "__main__":
         scatter_highest = highest_points[['近来控盘比例趋势']]
         
        
-        id_ = 5  # The index of the panel where control trend is plotted
+        id_ = 4  # The index of the panel where control trend is plotted
         axes[id_].scatter(df.index.strftime('%m%d'),df["近来控盘比例趋势"],color="b",marker="o",s=2)
         axes[id_].scatter(scatter_lowest.index.strftime('%m%d'),scatter_lowest["近来控盘比例趋势"],color="green",marker="s",s=10)
         axes[id_].scatter(scatter_highest.index.strftime('%m%d'),scatter_highest["近来控盘比例趋势"],color="red",marker="s",s=10)
@@ -357,8 +372,175 @@ if __name__ == "__main__":
 
                 
         
-        fig.savefig(f'trends/{title}.png',format="png")
+        #
+        # ax_new = fig.add_subplot(414)
+        # ax_new.plot()
+        # ax_new.scatter(scatter_lowest.index.strftime('%m%d'),scatter_lowest["近来控盘比例趋势"],color="green",marker="s",s=10)
+        # ax_new.scatter(scatter_highest.index.strftime('%m%d'),scatter_highest["近来控盘比例趋势"],color="red",marker="s",s=10)
         
+        # fig.tight_layout()
+        
+        fig.savefig(f'trends/{title}.png',format="png")
+
+
+def attention_kongpan2():
+    import mplfinance as mpf
+    from tqdm import tqdm
+    import matplotlib.pyplot as plt
+    import warnings
+    warnings.filterwarnings("ignore")
+    plt.rcParams['font.sans-serif']=['MicroSoft YaHei'] #用来正常显示中文标签
+    plt.rcParams['axes.unicode_minus']=False #用来正常显示负号
+    def kongpan_attention_kline_data():
+        from ATTENTION import ATTENTION
+        from utils import get_code_name
+        code_name_df,spot_df = get_code_name()
+        data = pd.DataFrame()
+        data["代码"] = ATTENTION
+        dfs = []
+        for code in ATTENTION:
+            stock_comment_detail_zlkp_jgcyd_em_df = ak.stock_comment_detail_zlkp_jgcyd_em(symbol=code)
+            tmp_date = stock_comment_detail_zlkp_jgcyd_em_df["date"].map(lambda x:datetime.strftime(x,"%Y%m%d"))
+            start_date = tmp_date[0]
+            end_date = tmp_date.tolist()[-1]
+            stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code, 
+                                                    period="daily", 
+                                                    start_date=start_date, 
+                                                    end_date=end_date, 
+                                                    adjust="qfq")
+            stock_comment_detail_zlkp_jgcyd_em_df.rename(columns={"value":"近来控盘比例趋势","date":"日期"},inplace=True)
+            df = pd.merge(stock_zh_a_hist_df,stock_comment_detail_zlkp_jgcyd_em_df,on="日期")
+            name = code_name_df[code_name_df["code"]==code]["name"].tolist()[0]
+            df["名称"] = name
+            # print(df)
+            # trend.append([round(x,2) for x in stock_comment_detail_zlkp_jgcyd_em_df["value"].tolist()])
+            dfs.append(df.copy())
+        return dfs
+    
+    if not os.path.exists('trends'):
+            os.makedirs('trends')
+    
+    
+    dfs = kongpan_attention_kline_data()
+    
+    for df in tqdm(dfs):
+        # 修改列名
+        df = df.rename(
+            {
+                "日期": "Date",
+                "开盘": "Open",
+                "收盘": "Close",
+                "最低": "Low",
+                "最高": "High",
+                "成交量": "Volume",
+            },
+            axis=1,
+        )
+
+        # 将 Date 列设为索引
+        df.index = df["Date"].astype("datetime64[ns]")
+        df = df.sort_index()
+        name = df["名称"].tolist()[0]
+        #plot style
+        mc = mpf.make_marketcolors(up='red',down='green',  volume={'up':'red','down':'green'})
+        style = mpf.make_mpf_style(rc={'font.family': 'SimHei'},
+                                    base_mpf_style= 'yahoo',
+                                    marketcolors=mc)
+        # 计算移动平均线
+        df['MA5'] = df['Close'].rolling(window=5).mean()
+        df['MA10'] = df['Close'].rolling(window=10).mean()
+        df['MA20'] = df['Close'].rolling(window=20).mean()
+        
+
+        df["mean_kp"] =  df["近来控盘比例趋势"].mean() 
+        df["std_kp"] =  df["近来控盘比例趋势"].std() 
+        df["lowbound_kp"] = df["mean_kp"] - 3 * df["std_kp"]
+        df["upperbound_kp"] = df["mean_kp"] + 3 * df["std_kp"]
+        
+        
+        
+        # 创建一个 Figure 和多个子图
+        fig, axes = plt.subplots(3,
+                                 1, 
+                                figsize=(14, 8), 
+                                gridspec_kw={'height_ratios': [3, 1, 1]}, 
+                                sharex=True)
+
+        title = f'{name}_{datetime.now().strftime("%Y%m%d")}'
+        # fig.suptitle(title)
+        
+        # 使用 mplfinance 绘制 K 线图
+        mpf_fig = mpf.plot(df, type='candle', 
+                 ax=axes[0], 
+                 volume=False, 
+                #  mav=(5, 10, 20),
+                style=style, 
+                datetime_format='%m%d', 
+                xrotation=90, 
+                title=name,
+                ylabel='price',)
+        
+        # 设置图例
+        axes[0].legend(loc='upper left')
+        
+        
+        # 使用 matplotlib 绘制交易量
+        colors = df['Close'] > df['Open']
+        colors = colors.map({True: 'red', False: 'green'})
+        axes[1].bar(df.index, df['Volume'], color=colors, alpha=0.4)
+        axes[1].set_ylabel('Volume')
+        
+        
+        # 使用 matplotlib 绘制控盘比例趋势
+        axes[2].plot(df.index.strftime('%m%d'), df["近来控盘比例趋势"], color="b", label="Control Trend")
+        axes[2].plot(df.index.strftime('%m%d'), df["mean_kp"], color="b", linestyle="dashed", label="Mean")
+        axes[2].plot(df.index.strftime('%m%d'), df["lowbound_kp"], color="green", linestyle="dashed", label="Lower Bound")
+        axes[2].plot(df.index.strftime('%m%d'), df["upperbound_kp"], color="red", linestyle="dashed", label="Upper Bound")
+
+        
+        
+        
+        
+        # #定制一下
+        # lines = [plt.Line2D([0], [0], color=color, lw=2) for color in ['blue', 'orange', 'green']]
+        # labels = ['MA5', 'MA10', 'MA20']
+        # axes[0].legend(lines, labels, loc='upper left')
+        
+        
+        #最高最低3点
+        # 找出最低和最高的3个点
+        lowest_points = df.nsmallest(3, '近来控盘比例趋势')
+        highest_points = df.nlargest(3, '近来控盘比例趋势')
+        # 准备散点数据
+        scatter_lowest = lowest_points[['近来控盘比例趋势']]
+        scatter_highest = highest_points[['近来控盘比例趋势']]
+        
+       
+        id_ = 2  # The index of the panel where control trend is plotted
+        axes[2].scatter(df.index.strftime('%m%d'),df["近来控盘比例趋势"],color="b",marker="o",s=2)
+        axes[2].scatter(scatter_lowest.index.strftime('%m%d'),scatter_lowest["近来控盘比例趋势"],color="green",marker="s",s=10)
+        axes[2].scatter(scatter_highest.index.strftime('%m%d'),scatter_highest["近来控盘比例趋势"],color="red",marker="s",s=10)
+        
+        for idx, row in scatter_lowest.iterrows():
+            date = idx.strftime('%m%d')
+            value = row['近来控盘比例趋势']
+            axes[2].annotate(f'{value:.2f}%', (date, value), textcoords="offset points", xytext=(5, 10), ha='center')
+        for idx, row in scatter_highest.iterrows():
+            date = idx.strftime('%m%d')
+            value = row['近来控盘比例趋势']
+            axes[2].annotate(f'{value:.2f}%', (date, value), textcoords="offset points", xytext=(5, -10), ha='center')
+
+                
+        
+        fig.savefig(f'trends/{title}.png',format="png")
+
+
+
+
+
+if __name__ == "__main__":
+    
+        attention_kongpan()
         
         # mpf.show()
         # pass
