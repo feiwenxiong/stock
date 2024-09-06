@@ -317,39 +317,51 @@ class DataFramePretty(object):
     def __init__(self, df: pd.DataFrame) -> None:
         self.data = df
 
-    def show(self,start_row=0, end_row=None):
+    def show(self, start_row=0, end_row=None):
+        """
+        显示指定范围的数据。
+
+        :param start_row: 起始行号
+        :param end_row: 结束行号
+        :return: rich 表格对象
+        """
         table = Table(show_header=True, header_style="bold magenta", show_lines=True)
         
-        # self.data是原始数据
-        # df 是用来显示的数据
+        # 复制数据以避免修改原数据
         df = self.data.copy()
         
         if end_row is None:
             end_row = len(df)
-        df = df[start_row:end_row]
-      
-        # 添加行序列号列
-        # table.add_column("行号", justify="right", style="dim")
+        df = df.iloc[start_row:end_row]
+
+        # 动态设置列宽，避免数据被截断
+        column_widths = {col: max(df[col].astype(str).map(len).max(), len(col)) for col in df.columns}
         for col in df.columns:
-            df[col] = df[col].astype("str")
-            table.add_column(col,overflow="fold")
+            table.add_column(col, width=column_widths[col], overflow="fold")
 
-        #  for col in df.columns:
-        #     table.add_column(col, overflow="fold")  # 自动处理溢出
+        for idx, row in df.iterrows():
+            table.add_row(*row.astype(str))
 
-
-        for idx in range(len(df)):
-            table.add_row(*df.iloc[idx].tolist())
-
-        # console = Console()
-        # console.print(table)
         return table
 
 
 
 
 
+
 def update_data(date, attention, stock_cache, dfp, poll_interval, code_name_df, indicator_lst, stop_event):
+    """
+    更新数据的线程函数。
+
+    :param date: 日期
+    :param attention: 关注的股票代码
+    :param stock_cache: 股票缓存数据
+    :param dfp: DataFramePretty 对象
+    :param poll_interval: 刷新间隔
+    :param code_name_df: 股票代码和名称的映射
+    :param indicator_lst: 指标列表
+    :param stop_event: 停止事件
+    """
     while not stop_event.is_set():
         stock_data = LimitUpPool().get_data_df_fcb(date, save=0)
         stock_data.drop("分时预览", axis=1, inplace=True)
@@ -367,6 +379,13 @@ def update_data(date, attention, stock_cache, dfp, poll_interval, code_name_df, 
         time.sleep(poll_interval)
 
 def track_stock_changes(date="20240906", poll_interval=5, attention=None):
+    """
+    跟踪股票变化并处理分页显示。
+
+    :param date: 日期
+    :param poll_interval: 刷新间隔
+    :param attention: 关注的股票代码
+    """
     console = Console()
     code_name_df, _ = get_code_name()
     if attention:
@@ -405,7 +424,7 @@ def track_stock_changes(date="20240906", poll_interval=5, attention=None):
             table = dfp.show(start_row=start_row, end_row=end_row)
             live.update(table)
 
-        
+            # console.print("update")
             # 监听用户输入
             while True:
                 if keyboard.is_pressed('s'):
@@ -432,12 +451,6 @@ def task_for_this_file():
     cur_path = os.path.abspath(os.path.dirname(__file__))
     print(cur_path)
     time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
-
-
-
-
-
-
 
 
 
