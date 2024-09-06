@@ -11,6 +11,12 @@ from datetime import timedelta
 from hot_stock import *
 import time
 from lhb import yyb_stocks2stock_yybs 
+import pandas as pd
+from rich.console import Console
+from rich.table import Table
+from rich.live import Live
+import select  # 确保导入 select 模块
+import keyboard
 
 class Continuous_limit_up(DataClass):
     
@@ -307,11 +313,148 @@ def today_limit_up_pool_detail_in_longhubang(save=True):
     return limit_up_detail,stock_lhb_detail_em_df_yyb
     
 
+class DataFramePretty(object):
+    def __init__(self, df: pd.DataFrame) -> None:
+        self.data = df
 
-if __name__ == "__main__":
+    def show(self,start_row=0, end_row=None):
+        table = Table(show_header=True, header_style="bold magenta", show_lines=True)
+        
+        # self.data是原始数据
+        # df 是用来显示的数据
+        df = self.data.copy()
+        
+        if end_row is None:
+            end_row = len(df)
+        df = df[start_row:end_row]
+      
+        # 添加行序列号列
+        # table.add_column("行号", justify="right", style="dim")
+        for col in df.columns:
+            df[col] = df[col].astype("str")
+            table.add_column(col,overflow="fold")
+
+        #  for col in df.columns:
+        #     table.add_column(col, overflow="fold")  # 自动处理溢出
+
+
+        for idx in range(len(df)):
+            table.add_row(*df.iloc[idx].tolist())
+
+        # console = Console()
+        # console.print(table)
+        return table
+
+
+
+
+
+def update_data(date, attention, stock_cache, dfp, poll_interval, code_name_df, indicator_lst, stop_event):
+    while not stop_event.is_set():
+        stock_data = LimitUpPool().get_data_df_fcb(date, save=0)
+        stock_data.drop("分时预览", axis=1, inplace=True)
+        stock_data = pd.merge(stock_data, code_name_df, on="代码", how="left", suffixes=("", "_y"))
+        
+        stock_new = pd.merge(stock_data, stock_cache, on="代码", how="left", suffixes=("", "_y"))
+        for indicator in indicator_lst:
+            new_col = round((stock_new[indicator] - stock_new[indicator + "_y"]) / stock_new[indicator + "_y"], 4) * 100
+            new_col = new_col.apply(lambda x: str(x) + "%")
+            stock_data[indicator + "_change"] = new_col
+
+        stock_cache.update(stock_data)
+        dfp.data = stock_data.copy()
+
+        time.sleep(poll_interval)
+
+def track_stock_changes(date="20240906", poll_interval=5, attention=None):
+    console = Console()
+    code_name_df, _ = get_code_name()
+    if attention:
+        code_name_df = code_name_df[code_name_df["code"].isin(attention)]
+
+    code_name_df = code_name_df.rename(columns={"code": "代码", "name": "名称"})
+    stock_cache = LimitUpPool().get_data_df_fcb(date, save=0)
+    stock_cache.drop("分时预览", axis=1, inplace=True)
+    stock_cache = pd.merge(stock_cache, code_name_df, on="代码", how="left", suffixes=("", "_y"))
+
+    indicator_lst = ["封单额"]
+    rows_per_page = 10  # 每页显示的行数
+    page = 0
+    stop_event = threading.Event()
+
+    dfp = DataFramePretty(stock_cache)
+
+    # 启动数据更新线程
+    update_thread = threading.Thread(target=update_data, args=(date, attention, stock_cache, dfp, poll_interval, code_name_df, indicator_lst, stop_event))
+    update_thread.daemon = True
+    update_thread.start()
+
+    total_pages = (len(stock_cache) + rows_per_page - 1) // rows_per_page
+
+     # 显示帮助信息
+    console.print("\n使用说明：")
+    console.print("w - 上一页")
+    console.print("s - 下一页")
+    console.print("q - 退出")
+    
+    with Live(console=console, refresh_per_second=1) as live:
+        while not stop_event.is_set():
+            start_row = page * rows_per_page
+            end_row = min(start_row + rows_per_page, len(dfp.data))
+
+            table = dfp.show(start_row=start_row, end_row=end_row)
+            live.update(table)
+
+        
+            # 监听用户输入
+            while True:
+                if keyboard.is_pressed('s'):
+                    if page < total_pages - 1:
+                        page += 1
+                    else:
+                        console.print("已经是最后一页。", style="bold red")
+                    break
+                elif keyboard.is_pressed('w'):
+                    if page > 0:
+                        page -= 1
+                    else:
+                        console.print("已经是第一页。", style="bold red")
+                    break
+                elif keyboard.is_pressed('q'):
+                    stop_event.set()
+                    break
+
+            time.sleep(0.1)  # 继续短暂停顿以保持实时刷新
+
+    update_thread.join()
+    
+def task_for_this_file():
     cur_path = os.path.abspath(os.path.dirname(__file__))
     print(cur_path)
     time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == "__main__":
+    # cur_path = os.path.abspath(os.path.dirname(__file__))
+    # print(cur_path)
+    # time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
+    # stock_data = LimitUpPool().get_data_df_fcb("20240906",save=0)
+    
+    # print(stock_data)
+    
+    
+    track_stock_changes()
+    
+    
     # try:
     #     time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
     # except Exception as e:
