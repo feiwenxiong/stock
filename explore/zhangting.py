@@ -17,6 +17,11 @@ from rich.table import Table
 from rich.live import Live
 import select  # 确保导入 select 模块
 import keyboard
+import tkinter as tk
+from pandastable import Table as Table2
+import pandas as pd
+from tkinter import ttk
+pd.set_option('future.no_silent_downcasting', True)
 
 class Continuous_limit_up(DataClass):
     
@@ -345,40 +350,7 @@ class DataFramePretty(object):
         return table
 
 
-
-
-
-
-def update_data(date, attention, stock_cache, dfp, poll_interval, code_name_df, indicator_lst, stop_event):
-    """
-    更新数据的线程函数。
-
-    :param date: 日期
-    :param attention: 关注的股票代码
-    :param stock_cache: 股票缓存数据
-    :param dfp: DataFramePretty 对象
-    :param poll_interval: 刷新间隔
-    :param code_name_df: 股票代码和名称的映射
-    :param indicator_lst: 指标列表
-    :param stop_event: 停止事件
-    """
-    while not stop_event.is_set():
-        stock_data = LimitUpPool().get_data_df_fcb(date, save=0)
-        stock_data.drop("分时预览", axis=1, inplace=True)
-        stock_data = pd.merge(stock_data, code_name_df, on="代码", how="left", suffixes=("", "_y"))
-        
-        stock_new = pd.merge(stock_data, stock_cache, on="代码", how="left", suffixes=("", "_y"))
-        for indicator in indicator_lst:
-            new_col = round((stock_new[indicator] - stock_new[indicator + "_y"]) / stock_new[indicator + "_y"], 4) * 100
-            new_col = new_col.apply(lambda x: str(x) + "%")
-            stock_data[indicator + "_change"] = new_col
-
-        stock_cache.update(stock_data)
-        dfp.data = stock_data.copy()
-
-        time.sleep(poll_interval)
-
-def track_stock_changes(date="20240906", poll_interval=5, attention=None):
+def track_stock_changes_cmd(date="20240906", poll_interval=5, attention=None):
     """
     跟踪股票变化并处理分页显示。
 
@@ -447,12 +419,120 @@ def track_stock_changes(date="20240906", poll_interval=5, attention=None):
 
     update_thread.join()
     
+
+
+def update_data(date, attention, stock_cache, dfp, poll_interval, code_name_df, indicator_lst, stop_event):
+    """
+    更新数据的线程函数。
+    """
+    while not stop_event.is_set():
+        stock_data = LimitUpPool().get_data_df_fcb(date, save=0)
+        stock_data.drop("分时预览", axis=1, inplace=True)
+        stock_data = pd.merge(stock_data, code_name_df, on="代码", how="left", suffixes=("", "_y"))
+        
+        stock_new = pd.merge(stock_data, stock_cache, on="代码", how="left", suffixes=("", "_y"))
+        for indicator in indicator_lst:
+            new_col = round((stock_new[indicator] - stock_new[indicator + "_y"]) / stock_new[indicator + "_y"], 4) * 100
+            new_col = new_col.apply(lambda x: str(x) + "%")
+            stock_data[indicator + "_change"] = new_col
+
+        stock_cache.update(stock_data)
+        dfp.data = stock_data.copy()
+
+        time.sleep(poll_interval)
+
+def track_stock_changes_qt(root, frame, date="20240906", poll_interval=5, attention=None):
+    """
+    跟踪股票变化。
+    """
+    code_name_df, _ = get_code_name()
+    if attention:
+        code_name_df = code_name_df[code_name_df["code"].isin(attention)]
+
+    code_name_df = code_name_df.rename(columns={"code": "代码", "name": "名称"})
+    stock_cache = LimitUpPool().get_data_df_fcb(date, save=0)
+    stock_cache.drop("分时预览", axis=1, inplace=True)
+    stock_cache = pd.merge(stock_cache, code_name_df, on="代码", how="left", suffixes=("", "_y"))
+
+    indicator_lst = ["封单额"]
+    dfp = DataFramePretty(stock_cache)
+
+    # # 启动数据更新线程
+    # update_thread = threading.Thread(target=update_data, args=(date, attention, stock_cache, dfp, poll_interval, code_name_df, indicator_lst, stop_event))
+    # update_thread.daemon = True
+    # update_thread.start()
+
+    # pt = Table2(frame, dataframe=dfp.data, showtoolbar=True, showstatusbar=True)
+    # pt.show()
+
+def start_update(stop_event, update_thread):
+    """开始更新数据"""
+    stop_event.clear()
+    update_thread.start()
+
+def stop_update(stop_event):
+    """停止更新数据"""
+    stop_event.set()
+
+# def qt_main_for_stock_changes(date=None, poll_interval=5, attention=None):
+#     """
+#     主函数用于启动图形界面。
+#     """
+#     if not date:
+#         date = time.strftime("%Y%m%d")
+
+#     root = tk.Tk() #创建window
+#     # root.geometry("540x360")  
+#     wwidth = 1120 #1080
+#     wheight = 840 #780
+    
+#     # 将窗口放置在屏幕中央  
+#     screen_width = root1.winfo_screenwidth()  # 获取屏幕宽度 
+#     screen_height = root1.winfo_screenheight()  # 获取屏幕高度  
+#     x = (screen_width  - wwidth ) // 2
+#     y = (screen_height  - wheight ) // 2
+#     root1.geometry(f"{wwidth}x{wheight}+{x}+{y}")  
+#     # root1.resizable(False, False)  # 禁止窗口伸缩 
+#     root.title('zhangting')
+
+#     frame = tk.Frame(root) #创建frame
+#     frame.pack(fill='both', expand=True)
+    
+#     notebook = ttk.Notebook(frame) # 绑定notebook到frame上
+#     notebook.pack(fill='both', expand=True) #填充方式
+
+#     tabs = []
+#     for i in range(3):
+#         tab = ttk.Frame(notebook)
+#         notebook.add(tab, text=f"Tab {i+1}")
+#         tabs.append(tab)
+
+
+    
+    
+#     # 创建按钮并绑定事件
+#     for tab in enumerate(tabs):
+#         if i == 0:
+#             start_button = ttk.Button(tab, text="开始", command=lambda: start_update(stop_event, threading.Thread(target=update_data, args=(date, attention, None, None, poll_interval, None, None, stop_event))))
+#             start_button.place(relx=0.05, rely=0.05, relwidth=0.1, relheight=0.05)
+
+#             stop_button = ttk.Button(tab, text="终止", command=lambda: stop_update(stop_event))
+#             stop_button.place(relx=0.17, rely=0.05, relwidth=0.1, relheight=0.05)
+
+#     # 使用 grid 布局管理器显示表格
+#     for i, tab in enumerate(tabs):
+#         if i == 0:
+#             track_stock_changes_qt(root, tab, date=date, poll_interval=poll_interval, attention=attention)
+#         # pt = Table2(tab, dataframe=pd.DataFrame(), showtoolbar=True, showstatusbar=True)
+#         # pt.grid(row=1, column=0, columnspan=2, sticky='nsew')
+
+#     root.mainloop()
+
+    
 def task_for_this_file():
     cur_path = os.path.abspath(os.path.dirname(__file__))
     print(cur_path)
     time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
-
-
 
 
 
@@ -463,10 +543,15 @@ if __name__ == "__main__":
     # stock_data = LimitUpPool().get_data_df_fcb("20240906",save=0)
     
     # print(stock_data)
+    pass
     
     
-    track_stock_changes()
+    # track_stock_changes_cmd(date="20240909")
+    # stop_event = threading.Event()
+    # qt_main_for_stock_changes(poll_interval=2 )
+  
     
+
     
     # try:
     #     time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
