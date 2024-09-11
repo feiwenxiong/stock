@@ -233,25 +233,33 @@ class DataFramePretty(object):
         return table
 
 
-def update_data(date, attention, stock_cache, dfp, poll_interval, code_name_df, indicator_lst, stop_event):
+def update_data(date, attention, stock_cache_lst, dfp, poll_interval, code_name_df, indicator_lst, stop_event,pt):
     """
     更新数据的线程函数。
     """
+    
     while not stop_event.is_set():
-        stock_data = LimitUpPool().get_data_df_fcb(date, save=0)
+        stock_cache = stock_cache_lst[0] #获得历史数据
+        stock_data = LimitUpPool().get_data_df_fcb(date, save=0) #获得当前数据
+        #数据处理
         stock_data.drop("分时预览", axis=1, inplace=True)
         stock_data = pd.merge(stock_data, code_name_df, on="代码", how="left", suffixes=("", "_y"))
-        
         stock_new = pd.merge(stock_data, stock_cache, on="代码", how="left", suffixes=("", "_y"))
         for indicator in indicator_lst:
             new_col = round((stock_new[indicator] - stock_new[indicator + "_y"]) / stock_new[indicator + "_y"], 4) * 100
             new_col = new_col.apply(lambda x: str(x) + "%")
             stock_data[indicator + "_change"] = new_col
-
-        stock_cache.update(stock_data)
-        dfp.data = stock_data.copy()
-
+        # print(stock_data[indicator + "_change"])
+        #处理完毕更新历史数据
+        stock_cache_lst[0] = stock_data.copy()
+        dfp.data = stock_data.copy() #跟新dfp的数据
+        print("updating zhangting data !!")
+        
+        pt.model.df = stock_data
+        pt.redraw()
+        # i += 1
         time.sleep(poll_interval)
+        
 def start_update(stop_event, update_thread):
     """开始更新数据"""
     stop_event.clear()
@@ -275,25 +283,36 @@ def start_track_stock_changes_qt():
     code_name_df, _ = get_code_name()
     if attention:
         code_name_df = code_name_df[code_name_df["code"].isin(attention)]
-
+    #初始化
     code_name_df = code_name_df.rename(columns={"code": "代码", "name": "名称"})
     stock_cache = LimitUpPool().get_data_df_fcb(date, save=0)
     stock_cache.drop("分时预览", axis=1, inplace=True)
     stock_cache = pd.merge(stock_cache, code_name_df, on="代码", how="left", suffixes=("", "_y"))
-
     
     dfp = DataFramePretty(stock_cache)
-
+    stock_cache_lst = [stock_cache]
+    
+    pt = Table2(table_frame, dataframe=dfp.data, showtoolbar=True, showstatusbar=True,
+                 width=1080,height=520)
+    pt.show()
+    
+    
     # 启动数据更新线程
-    update_thread = threading.Thread(target=update_data, args=(date, attention, stock_cache, dfp, poll_interval, code_name_df, indicator_lst, stop_event))
+    update_thread = threading.Thread(target=update_data, 
+                                     args=(date, attention, 
+                                           stock_cache_lst, 
+                                           dfp, 
+                                           poll_interval, 
+                                           code_name_df, 
+                                           indicator_lst, 
+                                           stop_event,
+                                           pt))
     update_thread.daemon = True
     # update_thread.start()
     start_update(stop_event,update_thread)
-    print("started!")
-
-    pt = Table2(table_frame, dataframe=dfp.data, showtoolbar=True, showstatusbar=True,
-                 width=1080,height=720)
-    pt.show()
+    print("updating thread started!")
+    
+    
 
     
 def task_for_this_file():
@@ -321,7 +340,7 @@ if __name__ == "__main__":
     x = (screen_width  - wwidth ) // 2
     y = (screen_height  - wheight ) // 2
     root.geometry(f"{wwidth}x{wheight}+{x}+{y}")  
-    # root.resizable(False, False)  # 禁止窗口伸缩 
+    root.resizable(False, False)  # 禁止窗口伸缩 
     root.title('myStock')
     frame = tk.Frame(root) #创建frame
     frame.pack(fill='both', expand=True)
@@ -351,8 +370,10 @@ if __name__ == "__main__":
         duration_entry = tk.Entry(tab1,textvariable=duration_var)    
 
         
-        start_button = ttk.Button(tab1, text="start", command=threading.Thread(target=start_track_stock_changes_qt).start())
-        stop_button = ttk.Button(tab1, text="stop", command=lambda: stop_update(stop_event))
+        start_button = ttk.Button(tab1, text="start", 
+                                  command=threading.Thread(target=start_track_stock_changes_qt).start())
+        stop_button = ttk.Button(tab1, text="stop", 
+                                 command=lambda: stop_update(stop_event))
         
         date_label.grid(row=0, column=0,sticky="E",pady=5)  # 行和列从0开始计数  
         date_entry.grid(row=0, column=1,sticky="E",columnspan=2) 
