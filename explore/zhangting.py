@@ -54,9 +54,6 @@ class Continuous_limit_up(DataClass):
         data = self.get_data_json(date,filt)
         if data["status_code"]:
             return pd.DataFrame()
-
-
-        
         return data["info"]
         
 class LimitUpPool(DataClass):
@@ -317,7 +314,6 @@ def today_limit_up_pool_detail_in_longhubang(save=True):
     
     return limit_up_detail,stock_lhb_detail_em_df_yyb
     
-
 class DataFramePretty(object):
     def __init__(self, df: pd.DataFrame) -> None:
         self.data = df
@@ -348,7 +344,6 @@ class DataFramePretty(object):
             table.add_row(*row.astype(str))
 
         return table
-
 
 def track_stock_changes_cmd(date="20240906", poll_interval=5, attention=None):
     """
@@ -419,8 +414,6 @@ def track_stock_changes_cmd(date="20240906", poll_interval=5, attention=None):
 
     update_thread.join()
     
-
-
 def update_data(date, attention, stock_cache, dfp, poll_interval, code_name_df, indicator_lst, stop_event):
     """
     更新数据的线程函数。
@@ -543,6 +536,16 @@ if __name__ == "__main__":
     # stock_data = LimitUpPool().get_data_df_fcb("20240906",save=0)
     
     # print(stock_data)
+    js_data = Continuous_limit_up().get_data_json(date="20240911",filt=1)
+    print(js_data["data"]["trade_status"]["name"])
+    t = pd.DataFrame(js_data["data"]["limit_up_count"])
+    print(t.reset_index())
+    # emx = earn_money_xiaoying()
+    # print(pd.DataFrame(earn_money_xiaoying()))
+    
+    
+    
+    # print(BlockTop().get_data_df(date="20240901",filt=1))
     pass
     
     

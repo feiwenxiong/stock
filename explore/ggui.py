@@ -20,217 +20,222 @@ import keyboard
 import tkinter as tk
 from pandastable import Table as Table2
 import pandas as pd
-from tkinter import ttk
+# from tkinter import ttk
+import ttkbootstrap as ttk
+# from ttkbootstrap.constants import *
 import warnings
+from zhangting import LimitUpPool,DataFramePretty
+from utils import closest_trade_date
+from PIL import Image, ImageTk
 warnings.filterwarnings('ignore')
 pd.set_option('future.no_silent_downcasting', True)
 
-class Continuous_limit_up(DataClass):
+# class Continuous_limit_up(DataClass):
     
-    def get_data_json(self,date,filt):
-        '''
-            date:20240726
-        '''
-        url = " https://data.10jqka.com.cn/dataapi/limit_up/continuous_limit_up"
-        match filt:
-            case 0:
-                # 沪深除了创科
-                filt = "HS"
-            case _:
-                # + 创、科创
-                filt = "HS,GEM2STAR"
-        params = {"filter": filt,
-                "date": date}
-        headers = {
-            "User-Agent":getUserAgent(),
+#     def get_data_json(self,date,filt):
+#         '''
+#             date:20240726
+#         '''
+#         url = " https://data.10jqka.com.cn/dataapi/limit_up/continuous_limit_up"
+#         match filt:
+#             case 0:
+#                 # 沪深除了创科
+#                 filt = "HS"
+#             case _:
+#                 # + 创、科创
+#                 filt = "HS,GEM2STAR"
+#         params = {"filter": filt,
+#                 "date": date}
+#         headers = {
+#             "User-Agent":getUserAgent(),
             
             
-        }
-        url = "https://data.10jqka.com.cn/dataapi/limit_up/limit_up_pool"
-        resp = rq.get(url, params=params,headers=headers)
-        res = resp.json()
-        return res
+#         }
+#         url = "https://data.10jqka.com.cn/dataapi/limit_up/limit_up_pool"
+#         resp = rq.get(url, params=params,headers=headers)
+#         res = resp.json()
+#         return res
 
     
-    def get_data_df(self,date,filt):
-        data = self.get_data_json(date,filt)
-        if data["status_code"]:
-            return pd.DataFrame()
+#     def get_data_df(self,date,filt):
+#         data = self.get_data_json(date,filt)
+#         if data["status_code"]:
+#             return pd.DataFrame()
 
 
         
-        return data["info"]
+#         return data["info"]
         
-class LimitUpPool(DataClass):
-    '''获取涨停的股票池
-    '''
+# class LimitUpPool(DataClass):
+#     '''获取涨停的股票池
+#     '''
 
     
-    def __init__(self):
-        super().__init__()
-        self.data_json = None
+#     def __init__(self):
+#         super().__init__()
+#         self.data_json = None
         
-    def get_data_json(self,date):
+#     def get_data_json(self,date):
         
-        params = {
-        "page": 1,
-        "limit": 200,
-        "field": "199112,10,9001,330323,330324,330325,9002,330329,133971,133970,1968584,3475914,9003,9004",
-        "filter": "HS,GEM2STAR",
-        "order_field": "330324",
-        "order_type": 0,
-        "date": date,
-        "_": 1722309210154
-        }
-        headers = {
-            "User-Agent":getUserAgent(),
+#         params = {
+#         "page": 1,
+#         "limit": 200,
+#         "field": "199112,10,9001,330323,330324,330325,9002,330329,133971,133970,1968584,3475914,9003,9004",
+#         "filter": "HS,GEM2STAR",
+#         "order_field": "330324",
+#         "order_type": 0,
+#         "date": date,
+#         "_": 1722309210154
+#         }
+#         headers = {
+#             "User-Agent":getUserAgent(),
             
-        }
-        url = "https://data.10jqka.com.cn/dataapi/limit_up/limit_up_pool"
-        resp = rq.get(url, params=params,headers=headers)
-        res = resp.json()
-        self.data_json = res
-        return res
+#         }
+#         url = "https://data.10jqka.com.cn/dataapi/limit_up/limit_up_pool"
+#         resp = rq.get(url, params=params,headers=headers)
+#         res = resp.json()
+#         self.data_json = res
+#         return res
 
-    def get_data_df(self,date,save=True):
-        data = self.get_data_json(date)["data"]
-        cols_cn = {
-        "open_num":"开板次数",
-        "first_limit_up_time" :"首次涨停时间",
-        "last_limit_up_time":"最后涨停时间",
-        "code":"代码",
-        "limit_up_type":'涨停形态',
-        "order_volume":"封单量",
-        "is_new":'新上',
-        "limit_up_suc_rate":"近一年涨停封板率",
-        "currency_value":"流通市值",
-        "is_again_limit":"是否连板",
-        "change_rate":"涨幅",
-        "turnover_rate":"换手率",
-        "reason_type":"涨停原因",
-        "order_amount":"封单额",
-        "high_days":"几天几板",
-        "name":"名称",
-        "change_tag":"是否回封",
-        "latest":"最新",
-        "time_preview":"分时预览",}
+#     def get_data_df(self,date,save=True):
+#         data = self.get_data_json(date)["data"]
+#         cols_cn = {
+#         "open_num":"开板次数",
+#         "first_limit_up_time" :"首次涨停时间",
+#         "last_limit_up_time":"最后涨停时间",
+#         "code":"代码",
+#         "limit_up_type":'涨停形态',
+#         "order_volume":"封单量",
+#         "is_new":'新上',
+#         "limit_up_suc_rate":"近一年涨停封板率",
+#         "currency_value":"流通市值",
+#         "is_again_limit":"是否连板",
+#         "change_rate":"涨幅",
+#         "turnover_rate":"换手率",
+#         "reason_type":"涨停原因",
+#         "order_amount":"封单额",
+#         "high_days":"几天几板",
+#         "name":"名称",
+#         "change_tag":"是否回封",
+#         "latest":"最新",
+#         "time_preview":"分时预览",}
 
-        info = data["info"]
-        info_df = pd.DataFrame(info)
-        info_df_cn = info_df.rename(columns=cols_cn)
-        info_df_cn["首次涨停时间"] = info_df_cn["首次涨停时间"].apply(int)
-        info_df_cn["最后涨停时间"] = info_df_cn["最后涨停时间"].apply(int)
-        info_df_cn["首次涨停时间"] = pd.to_datetime(info_df_cn["首次涨停时间"],unit="s") +  timedelta(hours=8)
-        info_df_cn["最后涨停时间"] = pd.to_datetime(info_df_cn["最后涨停时间"],unit="s") +  timedelta(hours=8)
+#         info = data["info"]
+#         info_df = pd.DataFrame(info)
+#         info_df_cn = info_df.rename(columns=cols_cn)
+#         info_df_cn["首次涨停时间"] = info_df_cn["首次涨停时间"].apply(int)
+#         info_df_cn["最后涨停时间"] = info_df_cn["最后涨停时间"].apply(int)
+#         info_df_cn["首次涨停时间"] = pd.to_datetime(info_df_cn["首次涨停时间"],unit="s") +  timedelta(hours=8)
+#         info_df_cn["最后涨停时间"] = pd.to_datetime(info_df_cn["最后涨停时间"],unit="s") +  timedelta(hours=8)
 
-        limit_up_count = data["limit_up_count"]
-        limit_down_count = data["limit_down_count"]
-        if save:
-            file_name  =os.path.join(os.path.dirname(__file__) ,getStrDate(2) + "_limit_up.xlsx")
-            info_df_cn.to_excel(file_name,index=False)
-        return info_df_cn,limit_up_count,limit_down_count
+#         limit_up_count = data["limit_up_count"]
+#         limit_down_count = data["limit_down_count"]
+#         if save:
+#             file_name  =os.path.join(os.path.dirname(__file__) ,getStrDate(2) + "_limit_up.xlsx")
+#             info_df_cn.to_excel(file_name,index=False)
+#         return info_df_cn,limit_up_count,limit_down_count
     
-    def get_data_df_fcb(self,date,save=True):
-        limit_up,limit_up_count,limit_down_count  = LimitUpPool().get_data_df(date,save=False)
-        lst = []
-        for code in limit_up["代码"]:
-            tmp = {}
-            tmp["代码"] = code
-            stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code,
-                                                    period="daily", 
-                                                    start_date=date, 
-                                                    end_date=date, 
-                                                    adjust="qfq")
-            tmp["成交量"] = stock_zh_a_hist_df["成交量"].loc[0] * 100
-            lst.append(tmp)
-        df = pd.DataFrame(lst)
+#     def get_data_df_fcb(self,date,save=True):
+#         limit_up,limit_up_count,limit_down_count  = LimitUpPool().get_data_df(date,save=False)
+#         lst = []
+#         for code in limit_up["代码"]:
+#             tmp = {}
+#             tmp["代码"] = code
+#             stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol=code,
+#                                                     period="daily", 
+#                                                     start_date=date, 
+#                                                     end_date=date, 
+#                                                     adjust="qfq")
+#             tmp["成交量"] = stock_zh_a_hist_df["成交量"].loc[0] * 100
+#             lst.append(tmp)
+#         df = pd.DataFrame(lst)
         
-        df_merged = pd.merge(limit_up,df,on=["代码"])
-        df_merged["封成比"] = df_merged["封单量"] / df_merged["成交量"] 
-        # print(df_merged)
+#         df_merged = pd.merge(limit_up,df,on=["代码"])
+#         df_merged["封成比"] = df_merged["封单量"] / df_merged["成交量"] 
+#         # print(df_merged)
         
-        df_merged["预测"] = df_merged["封成比"].apply(self.fcb_map)
-        if save:
-            file_name  =os.path.join(os.path.dirname(__file__) ,getStrDate(2) + "_limit_up_fengchengbi.xlsx")
-            df_merged.to_excel(file_name,index=False)
-        return df_merged
+#         df_merged["预测"] = df_merged["封成比"].apply(self.fcb_map)
+#         if save:
+#             file_name  =os.path.join(os.path.dirname(__file__) ,getStrDate(2) + "_limit_up_fengchengbi.xlsx")
+#             df_merged.to_excel(file_name,index=False)
+#         return df_merged
     
     
-    @staticmethod
-    def fcb_map(x):
-        if x >= 10:
-            return "涨停高开概率>70%"
-        if 3 <= x < 10:
-            return "明天高开在6-10%之间"
-        if 1 <= x < 3:
-            return "明天高开在3-6%之间" 
-        if 0.5 <= x < 1:
-            return "明天高开在1-3%之间" 
-        return "无"
+#     @staticmethod
+#     def fcb_map(x):
+#         if x >= 10:
+#             return "涨停高开概率>70%"
+#         if 3 <= x < 10:
+#             return "明天高开在6-10%之间"
+#         if 1 <= x < 3:
+#             return "明天高开在3-6%之间" 
+#         if 0.5 <= x < 1:
+#             return "明天高开在1-3%之间" 
+#         return "无"
         
-class BlockTop(DataClass):
-    '''
-    获取板块的信息
-    '''
-    def get_data_json(self,date,filt):
-        url = "https://data.10jqka.com.cn/dataapi/limit_up/block_top"
-        match filt:
-            case 0:
-                # 沪深除了创科
-                filt = "HS"
-            case _:
-                # + 创、科创
-                filt = "HS,GEM2STAR"
-        params = {"filter": filt,
-                "date": date}
-        headers = {
-            "User-Agent":getUserAgent(),
+# class BlockTop(DataClass):
+#     '''
+#     获取板块的信息
+#     '''
+#     def get_data_json(self,date,filt):
+#         url = "https://data.10jqka.com.cn/dataapi/limit_up/block_top"
+#         match filt:
+#             case 0:
+#                 # 沪深除了创科
+#                 filt = "HS"
+#             case _:
+#                 # + 创、科创
+#                 filt = "HS,GEM2STAR"
+#         params = {"filter": filt,
+#                 "date": date}
+#         headers = {
+#             "User-Agent":getUserAgent(),
             
-        }
-        resp = rq.get(url, params=params,headers=headers)
-        res = resp.json()
-        return res
+#         }
+#         resp = rq.get(url, params=params,headers=headers)
+#         res = resp.json()
+#         return res
 
     
-    def get_data_df(self, date,filt):
-        data = self.get_data_json(date,filt)
-        if data["status_code"]:
-            return pd.DataFrame()
-        df = pd.DataFrame(data["data"])
-        # df["stock_list"]
+#     def get_data_df(self, date,filt):
+#         data = self.get_data_json(date,filt)
+#         if data["status_code"]:
+#             return pd.DataFrame()
+#         df = pd.DataFrame(data["data"])
+#         # df["stock_list"]
 
-        return df
+#         return df
 
-class DataFramePretty(object):
-    def __init__(self, df: pd.DataFrame) -> None:
-        self.data = df
+# class DataFramePretty(object):
+#     def __init__(self, df: pd.DataFrame) -> None:
+#         self.data = df
 
-    def show(self, start_row=0, end_row=None):
-        """
-        显示指定范围的数据。
+#     def show(self, start_row=0, end_row=None):
+#         """
+#         显示指定范围的数据。
 
-        :param start_row: 起始行号
-        :param end_row: 结束行号
-        :return: rich 表格对象
-        """
-        table = Table(show_header=True, header_style="bold magenta", show_lines=True)
+#         :param start_row: 起始行号
+#         :param end_row: 结束行号
+#         :return: rich 表格对象
+#         """
+#         table = Table(show_header=True, header_style="bold magenta", show_lines=True)
         
-        # 复制数据以避免修改原数据
-        df = self.data.copy()
+#         # 复制数据以避免修改原数据
+#         df = self.data.copy()
         
-        if end_row is None:
-            end_row = len(df)
-        df = df.iloc[start_row:end_row]
+#         if end_row is None:
+#             end_row = len(df)
+#         df = df.iloc[start_row:end_row]
 
-        # 动态设置列宽，避免数据被截断
-        column_widths = {col: max(df[col].astype(str).map(len).max(), len(col)) for col in df.columns}
-        for col in df.columns:
-            table.add_column(col, width=column_widths[col], overflow="fold")
+#         # 动态设置列宽，避免数据被截断
+#         column_widths = {col: max(df[col].astype(str).map(len).max(), len(col)) for col in df.columns}
+#         for col in df.columns:
+#             table.add_column(col, width=column_widths[col], overflow="fold")
 
-        for idx, row in df.iterrows():
-            table.add_row(*row.astype(str))
+#         for idx, row in df.iterrows():
+#             table.add_row(*row.astype(str))
 
-        return table
+#         return table
 
 
 def update_data(date, attention, stock_cache_lst, dfp, poll_interval, code_name_df, indicator_lst, stop_event,pt):
@@ -313,26 +318,30 @@ def start_track_stock_changes_qt():
     print("updating thread started!")
     
     
-
     
-def task_for_this_file():
-    cur_path = os.path.abspath(os.path.dirname(__file__))
-    print(cur_path)
-    time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
-
-
-
-
+# def task_for_this_file():
+#     cur_path = os.path.abspath(os.path.dirname(__file__))
+#     print(cur_path)
+#     time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
 
 
 if __name__ == "__main__":
-
+    #global variable
     stop_event = threading.Event()
+    nearest_trade_date = closest_trade_date()
+    
+    #start tkinter
+    # root = tk.Tk() #创建window
+    root = ttk.Window(themename="minty")
+    style = ttk.Style()
+    theme_names = style.theme_names()#以列表的形式返回多个主题名
+    print("themes: ",theme_names)
+    root.geometry("1280x720")  
 
-    root = tk.Tk() #创建window
-    # root.geometry("540x360")  
+  
     wwidth = 1280 #1080
-    wheight = 840 #780
+    wheight = 720 #780
+    
     
     # 将窗口放置在屏幕中央  
     screen_width = root.winfo_screenwidth()  # 获取屏幕宽度 
@@ -340,7 +349,7 @@ if __name__ == "__main__":
     x = (screen_width  - wwidth ) // 2
     y = (screen_height  - wheight ) // 2
     root.geometry(f"{wwidth}x{wheight}+{x}+{y}")  
-    root.resizable(False, False)  # 禁止窗口伸缩 
+    # root.resizable(False, False)  # 禁止窗口伸缩 
     root.title('myStock')
     frame = tk.Frame(root) #创建frame
     frame.pack(fill='both', expand=True)
@@ -353,25 +362,25 @@ if __name__ == "__main__":
 
     if 1 :
         tab1 = ttk.Frame(notebook)
-        notebook.add(tab1, text="实时涨停池")
+        notebook.add(tab1, text="涨停池[实时]")
         duration_label = tk.Label(tab1, text="间隔时间: ",justify="right")  
         date_label = tk.Label(tab1, text="日期: ",justify="right")  
         
         # 创建输入框
         date_var = tk.StringVar()  
-        date = time.strftime("%Y%m%d")
-        date_var.set(date)
+        # date = time.strftime("%Y%m%d")
+        date_var.set(nearest_trade_date)
         date_entry = tk.Entry(tab1, textvariable=date_var)  
 
 
         # 创建输入框，数据类型是int，预填值为100  
         duration_var = tk.IntVar()
-        duration_var.set(2)
+        duration_var.set(1)
         duration_entry = tk.Entry(tab1,textvariable=duration_var)    
 
         
         start_button = ttk.Button(tab1, text="start", 
-                                  command=threading.Thread(target=start_track_stock_changes_qt).start())
+                                  command=lambda: threading.Thread(target=start_track_stock_changes_qt).start())
         stop_button = ttk.Button(tab1, text="stop", 
                                  command=lambda: stop_update(stop_event))
         
@@ -389,21 +398,18 @@ if __name__ == "__main__":
                             )
         table_frame.place(x=20,y=150) 
         # table_frame.pack(side="top", fill="both", expand=True)
-        
-    
-
     
     if 2:
         
         def kongpan_qt():
             print("start kongpan_attention")
             data = kongpan_attention()
-            stock_selection_df = getTodayStock(save=False)
-            data = pd.merge(data[["代码","近来控盘比例趋势"]],
-                            stock_selection_df,
-                            left_on="代码",
-                            right_on="代码",
-                            how="left")
+            # stock_selection_df = getTodayStock(save=False)
+            # data = pd.merge(data[["代码","近来控盘比例趋势"]],
+            #                 stock_selection_df,
+            #                 left_on="代码",
+            #                 right_on="代码",
+            #                 how="left")
             pt2 = Table2(tab_frame2, dataframe=data, showtoolbar=True, showstatusbar=True,
                              )
             pt2.show()
@@ -413,7 +419,7 @@ if __name__ == "__main__":
         tab2 = ttk.Frame(notebook)
         notebook.add(tab2, text="关注控盘")
         update_button2 = ttk.Button(tab2, 
-                            text="update", 
+                            text="start", 
                             command=lambda:threading.Thread(target=kongpan_qt).start())
         update_button2.pack()
         
@@ -445,7 +451,7 @@ if __name__ == "__main__":
         tab3 = ttk.Frame(notebook)
         notebook.add(tab3, text="龙虎榜和营业部")
         update_button3 = ttk.Button(tab3, 
-                            text="update", 
+                            text="start", 
                             command=lambda:threading.Thread(target=f3).start())
         update_button3.pack()
         tab_frame3 = tk.Frame(tab3) # 创建一个table容器
@@ -463,53 +469,67 @@ if __name__ == "__main__":
         tab4 = ttk.Frame(notebook)
         notebook.add(tab4, text="今日涨停池[+龙虎榜信息]")
         update_button4 = ttk.Button(tab4, 
-                            text="update", 
+                            text="start", 
                             command=lambda:threading.Thread(target=f4).start())
         update_button4.pack()
         tab_frame4 = tk.Frame(tab4) # 创建一个table容器
         tab_frame4.pack(fill='both', expand=True)
 
     if 5:
-        tab6 = ttk.Frame(notebook)#board名录
-        notebook.add(tab6, text="板块总体")
+        tab5 = ttk.Frame(notebook)#board名录
+        notebook.add(tab5, text="板块总体[实时]")
+        from utils import is_now_open,is_now_break
+        def f5():
+            while 1:
+                if is_now_open():
+                    if not is_now_break():
+                        stock_board_industry_name_em_df = ak.stock_board_industry_name_em()
+                        pt5.model.df = stock_board_industry_name_em_df.copy()
+                        pt5.redraw()
+                        #3.5s更新一次
+                        print("updating 板块总体!")
+                    else:
+                        pass
+                time.sleep(3.5)
+        #初始化
         stock_board_industry_name_em_df = ak.stock_board_industry_name_em()
-        # print(stock_board_industry_name_em_df)
-        # df_dict["板块名录"] = stock_board_industry_name_em_df
-        pt6 = Table2(tab6, dataframe=stock_board_industry_name_em_df, showtoolbar=True, showstatusbar=True,
+        pt5 = Table2(tab5, dataframe=stock_board_industry_name_em_df, showtoolbar=True, showstatusbar=True,
                     )
         # tab6.pack(fill="both", expand=True)
-        pt6.show()
+        pt5.show()
+        thread5 = threading.Thread(target=f5)
+        thread5.damon = True
+        thread5.start()
     
     if 6:
-        def f5():
+        def f6():
             print("start 板块个股 ")
             bankuai_str = bankuai_var.get()
             stock_board_industry_cons_em_df = ak.stock_board_industry_cons_em(symbol=bankuai_str)
-            pt5 = Table2(tab_frame5, dataframe=stock_board_industry_cons_em_df, showtoolbar=True, showstatusbar=True,
+            pt6 = Table2(tab_frame6, dataframe=stock_board_industry_cons_em_df, showtoolbar=True, showstatusbar=True,
                     )
-            pt5.show()
+            pt6.show()
         
         
         #添加tab frame
-        tab5 = ttk.Frame(notebook)
-        notebook.add(tab5, text="某板块个股")
+        tab6 = ttk.Frame(notebook)
+        notebook.add(tab6, text="某板块个股")
         #添加entry和绑定变量
         bankuai_var = tk.StringVar()  
         bankuai_var.set("消费电子")
-        bankuai_entry = tk.Entry(tab5, textvariable=bankuai_var)  
+        bankuai_entry = tk.Entry(tab6, textvariable=bankuai_var)  
         bankuai_entry.pack()
         
-        update_button5 = ttk.Button(tab5, 
+        update_button6 = ttk.Button(tab6, 
                             text="start", 
-                            command=lambda:threading.Thread(target=f5).start())
-        update_button5.pack()
+                            command=lambda:threading.Thread(target=f6).start())
+        update_button6.pack()
         
-        tab_frame5 = tk.Frame(tab5) # 创建一个table容器
-        tab_frame5.pack(fill='both', expand=True)
-    
-        
+        tab_frame6 = tk.Frame(tab6) # 创建一个table容器
+        tab_frame6.pack(fill='both', expand=True)
+      
     if 7:
-        tab7 = ttk.Frame(notebook)#board名录
+        tab7 = ttk.Frame(notebook)
         notebook.add(tab7, text="关注列表")
         from ATTENTION import ATTENTION
         df = pd.DataFrame(ATTENTION)
@@ -518,22 +538,194 @@ if __name__ == "__main__":
                     )
         # tab6.pack(fill="both", expand=True)
         pt7.show()
+           
+    if 8:
+        from hot_stock import getTodayStock
+        def get_stock_selection_df():
+            print("start stock selection!")
+            stock_selection_df = getTodayStock(save=0)
+            pt8 = Table2(tab_frame8, 
+                         dataframe=stock_selection_df, 
+                         showtoolbar=True, 
+                         showstatusbar=True,
+                    )
+            pt8.show()
+            
+             
+        tab8 = ttk.Frame(notebook)
+        notebook.add(tab8, text="选股")    
+        start_button_8 = ttk.Button(tab8, 
+                            text="start", 
+                            command=lambda:threading.Thread(target=get_stock_selection_df).start())
+        start_button_8.pack()
+        tab_frame8 = tk.Frame(tab8)
+        tab_frame8.pack(fill='both', expand=True)
+        
+    if 9:
+        def dapan():
+            print("start dapan !!!")
+            from hot_stock import earn_money_xiaoying
+            from zhangting import Continuous_limit_up,BlockTop
+        
+            emx = pd.DataFrame(earn_money_xiaoying())
+            pt91 = Table2(table_frame91, 
+                        dataframe=emx, 
+                        showtoolbar=True, 
+                        showstatusbar=True,
+                )
+            pt91.show()
+            
+            
+            #######
+            js_data = Continuous_limit_up().get_data_json(date=nearest_trade_date,filt=1)
+            t = js_data["data"]
+            t_name = t["trade_status"]["name"]
+            t_data = pd.DataFrame(t["limit_up_count"]).reset_index()
+            pt92 = Table2(table_frame92, 
+                        dataframe=t_data, 
+                        showtoolbar=True, 
+                        showstatusbar=True,
+                )
+            pt92.show()
+            #############
+            
+            
+            
+            bt = BlockTop().get_data_df(date=nearest_trade_date,filt=1).drop("stock_list",axis=1)
+            
+            pt93 = Table2(table_frame93, 
+                            dataframe=bt, 
+                            showtoolbar=True, 
+                            showstatusbar=True,
+                            )
+            pt93.show()
+            
+            
+            while str(t_name) == "交易中":
+                print("    循环更新")
+                emx = pd.DataFrame(earn_money_xiaoying())
+                js_data = Continuous_limit_up().get_data_json(date=nearest_trade_date,filt=1)
+                t =js_data["data"]
+                t_name = t["trade_status"]["name"]
+                t_data = pd.DataFrame(t["limit_up_count"]).reset_index()
+                bt = BlockTop().get_data_df(date=nearest_trade_date,filt=1).drop("stock_list",axis=1)
+                
+                pt91.model.df = emx
+                pt92.model.df = t_data
+                pt93.model.df = bt
+                
+                pt91.redraw()
+                pt92.redraw()
+                pt93.redraw()
+                
+                time.sleep(3)
         
         
-        
-    # if 8:
-        # tab8 = ttk.Frame(notebook)#board名录
-        # notebook.add(tab8, text="")
- 
-        # pt8 = Table2(tab8, dataframe=, showtoolbar=True, showstatusbar=True,)
-        # # tab6.pack(fill="both", expand=True)
-        # pt8.show()
+        tab9 = ttk.Frame(notebook)
+        notebook.add(tab9, text="大盘趋势[实时]")  
+        button_9 = ttk.Button(tab9, 
+                            text="start", 
+                            command=lambda:threading.Thread(target=dapan).start())
+        # button_9.pack()
+        button_9.grid(row=0, column=0, pady=(5, 0))
+        table_frame91 = ttk.Frame(tab9)
+        table_frame92 = ttk.Frame(tab9)
+        table_frame93 = ttk.Frame(tab9)
+        # table_frame91.pack( )
+        # table_frame92.pack( )
+        # table_frame93.pack( )
+        # 使用 grid 布局来分配表格位置
+        table_frame91.grid(row=1, column=0, sticky='nsew')
+        table_frame92.grid(row=1, column=1, sticky='nsew')
+        table_frame93.grid(row=2, column=0, columnspan=2, sticky='nsew')
+
+        # 设置列和行权重以适应窗口变化
+        tab9.columnconfigure(0, weight=1)
+        tab9.columnconfigure(1, weight=1)
+        tab9.rowconfigure(1, weight=12) #奇怪
+        tab9.rowconfigure(2, weight=1)
     
-    root.mainloop()
-  
+    if 10:   
+        
+        my_images = []
+        def f10():
+            images_folder = folder_var.get()
+
+            # 检查文件夹是否存在
+            if os.path.exists(images_folder):
+                # 如果存在，则删除文件夹
+                import shutil
+                shutil.rmtree(images_folder)
+                print(f"已删除并重新创建文件夹: {images_folder}")
+
+            os.makedirs(images_folder, exist_ok=True)
+            print(f"已创建文件夹: {images_folder}")
+
+            #业务逻辑
+            attention_kongpan(images_folder)
+            
+            
+            # # 清空img_frame
+            # for widget in img_frame.winfo_children():
+            #     widget.destroy()
+            
+            # 遍历文件夹中的图片
+            # row = 0
+            # column = 0
+            # max_columns = 3  # 每行最多展示3张图片
+            cols = 1
+            x_offset = 0
+            y_offset = 0
+            for i,img_path in enumerate(os.listdir(images_folder)):
+                row = i // cols
+                col = i % cols
+                if img_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+                    # 加载图片并调整大小
+                    img = Image.open(os.path.join(images_folder, img_path))
+                    if i == 0:
+                        image_width = img.width
+                        image_height = img.height
+
+                    
+                    # 计算图片位置  
+                    x = x_offset + col * image_width  
+                    y = y_offset + row * image_height
+                    
+        
+                    img_tk = ImageTk.PhotoImage(img)
+                    image_id = canvas.create_image(x, y, image=img_tk, anchor='nw')
+                    my_images.append(img_tk)
+
+            canvas.config(scrollregion=canvas.bbox("all"))
+            
+        from utils import attention_kongpan
+        tab10 = ttk.Frame(notebook)
+        notebook.add(tab10, text="关注列表-今日K线")
+        # 创建输入框
+        folder_var = tk.StringVar()  
+        # date = time.strftime("%Y%m%d")
+        folder_var.set("trends")
+        folder_entry = tk.Entry(tab10, textvariable=folder_var)  
+        # date_label = tk.Label(tab1, text="日期: ",justify="right")  
+        folder_entry.pack()
+        button10 = ttk.Button(tab10, 
+                            text="start", 
+                            command=lambda:threading.Thread(target=f10).start())
+        button10.pack()
+
+        # 创建img_frame
+        img_frame = ttk.Frame(tab10)
+        img_frame.pack(fill='both', expand=True)
+        
     
 
-    
+     
+        # 创建Canvas和vsb
+        canvas = tk.Canvas(img_frame, borderwidth=1, bg="#ffffff")
+        vsb = tk.Scrollbar(img_frame, orient=tk.VERTICAL, command=canvas.yview)
+        canvas.configure(yscrollcommand=vsb.set) 
+        vsb.pack(side=tk.RIGHT, fill=tk.Y)
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)  
+        
 
-    
-    
+    root.mainloop() 

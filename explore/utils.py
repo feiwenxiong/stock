@@ -181,7 +181,7 @@ def add_charts(df):
 
 
 
-def attention_kongpan():
+def attention_kongpan(folder="trends"):
     import mplfinance as mpf
     from tqdm import tqdm
     import matplotlib.pyplot as plt
@@ -215,8 +215,8 @@ def attention_kongpan():
             dfs.append(df.copy())
         return dfs
     
-    if not os.path.exists('trends'):
-            os.makedirs('trends')
+    if not os.path.exists(folder):
+            os.makedirs(folder)
     
     
     dfs = kongpan_attention_kline_data()
@@ -380,10 +380,10 @@ def attention_kongpan():
         
         # fig.tight_layout()
         
-        fig.savefig(f'trends/{title}.png',format="png")
+        fig.savefig(f'{folder}/{title}.png',format="png")
 
 
-def attention_kongpan2():
+def attention_kongpan2(folder="trends"):
     import mplfinance as mpf
     from tqdm import tqdm
     import matplotlib.pyplot as plt
@@ -417,8 +417,8 @@ def attention_kongpan2():
             dfs.append(df.copy())
         return dfs
     
-    if not os.path.exists('trends'):
-            os.makedirs('trends')
+    if not os.path.exists(folder):
+        os.makedirs(folder)
     
     
     dfs = kongpan_attention_kline_data()
@@ -532,16 +532,46 @@ def attention_kongpan2():
 
                 
         
-        fig.savefig(f'trends/{title}.png',format="png")
+        fig.savefig(f'{folder}/{title}.png',format="png")
+
+
+def closest_trade_date():
+    # from instock.crawling.trade_date_hist import tool_trade_date_hist_sina
+    import akshare as ak
+    tool_trade_date_hist_df = ak.tool_trade_date_hist_sina()
+    # print(tool_trade_date_hist_df)
+    from datetime import datetime
+    # print(datetime.now().strftime("%Y-%m-%d"))
+    t = tool_trade_date_hist_df[tool_trade_date_hist_df["trade_date"] <= datetime.now().date()].iloc[-1].values[0].strftime("%Y%m%d")
+    # print(t)
+    return t
 
 
 
+def is_now_open():
+    from datetime import datetime,time
+    now = datetime.now()
+    trade_closest_date = closest_trade_date()
+    current_date = now.date().strftime("%Y%m%d")
+    if current_date > trade_closest_date:
+        return False
+    else:
+        start_time = datetime.combine(now.date(), time(9, 30))  # 构造今天的9点半时间  
+        end_time = datetime.combine(now.date(), time(15, 0))    # 构造今天的15点时间  
+        return start_time <= now <= end_time 
 
+def is_now_break():
+    from datetime import datetime,time
+    now = datetime.now()
+    start_time = datetime.combine(now.date(), time(11, 31))  # 构造今天的9点半时间  
+    end_time = datetime.combine(now.date(), time(12, 59))    # 构造今天的15点时间  
+    return start_time <= now <= end_time
 
+ 
 if __name__ == "__main__":
     
-        attention_kongpan()
-        
+        # attention_kongpan(folder="trends")
+        print(is_now_open())
         # mpf.show()
         # pass
 
