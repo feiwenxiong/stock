@@ -1,6 +1,6 @@
 chcp 65001
 @echo off
-call conda.bat activate
-call conda activate stock
-python ggui.py
-exit
+call conda.bat activate || pause
+call conda activate stock || pause
+python ggui.py || pause
+pause
