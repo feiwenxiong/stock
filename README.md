@@ -1,4 +1,17 @@
-# window用户看过来
+
+# explore系统
+explore文件夹下有新的tkinter界面程序；实现了许多功能
+windows用户的话有快捷打开:点击我的股票客户端.bat运行
+python打开的话，cd 到explore文件夹，然后执行python ggui.py
+![](img/image.png)
+ps：关注列表就是ATTENTION.py里面，是stock code的list
+大家自己去玩玩吧，不截图了，太麻烦了
+
+
+
+
+
+# Instock浏览器WEB程序更新
 1. 安装mysql，root设置密码为gb310
 2. prepare_env.bat创建stock虚拟环境，报错就自己缺啥装啥
 3. 然后启动start_program.bat就好了
@@ -9,6 +22,8 @@
 ![](img/neo2.png)
 ![](img/neo4.png)
 # #######
+
+
 
 
 
