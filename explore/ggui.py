@@ -272,7 +272,7 @@ def start_update(stop_event, update_thread):
 def stop_update(stop_event):
     """停止更新数据"""
     stop_event.set()
-    print("stop")
+    print("stop zhangting data !")
 
 
 def start_track_stock_changes_qt():
@@ -336,11 +336,11 @@ if __name__ == "__main__":
     style = ttk.Style()
     theme_names = style.theme_names()#以列表的形式返回多个主题名
     print("themes: ",theme_names)
-    root.geometry("1280x720")  
+    root.geometry("1480x820")  
 
   
-    wwidth = 1280 #1080
-    wheight = 720 #780
+    wwidth = 1480 #1080
+    wheight = 820 #780
     
     
     # 将窗口放置在屏幕中央  
@@ -399,81 +399,7 @@ if __name__ == "__main__":
         table_frame.place(x=20,y=150) 
         # table_frame.pack(side="top", fill="both", expand=True)
     
-    if 2:
-        
-        def kongpan_qt():
-            print("start kongpan_attention")
-            data = kongpan_attention()
-            # stock_selection_df = getTodayStock(save=False)
-            # data = pd.merge(data[["代码","近来控盘比例趋势"]],
-            #                 stock_selection_df,
-            #                 left_on="代码",
-            #                 right_on="代码",
-            #                 how="left")
-            pt2 = Table2(tab_frame2, dataframe=data, showtoolbar=True, showstatusbar=True,
-                             )
-            pt2.show()
-                
-            
-        from hot_stock import kongpan_attention
-        tab2 = ttk.Frame(notebook)
-        notebook.add(tab2, text="关注控盘")
-        update_button2 = ttk.Button(tab2, 
-                            text="start", 
-                            command=lambda:threading.Thread(target=kongpan_qt).start())
-        update_button2.pack()
-        
-        tab_frame2 = tk.Frame(tab2)
-        tab_frame2.pack(fill='both', expand=True)
-        
-    if 3:
-        def f3():
-            print("start stock2yyb")
-            from lhb import yyb_stocks2stock_yybs
-            from utils import getStrDate
-            date = getStrDate(1)
-            print(date)
-            ##构建营业部和股票的关系图
-            # lhb_yyb_stock_daily_work(start_date="20240731", end_date="20240731")
-            youzi_file = os.path.join(os.path.dirname(__file__),"swim_cash3.json")
-            # stock2yyb = yyb_stocks2stock_yybs(date,youzi_file)
-            
-            try:
-                stock2yyb = yyb_stocks2stock_yybs(date,youzi_file)#可能没更新
-            except:
-                stock2yyb = pd.DataFrame()
-            
-            
-            pt3 = Table2(tab_frame3, dataframe=stock2yyb, showtoolbar=True, showstatusbar=True,
-                    )
-            pt3.show()
-        
-        tab3 = ttk.Frame(notebook)
-        notebook.add(tab3, text="龙虎榜和营业部")
-        update_button3 = ttk.Button(tab3, 
-                            text="start", 
-                            command=lambda:threading.Thread(target=f3).start())
-        update_button3.pack()
-        tab_frame3 = tk.Frame(tab3) # 创建一个table容器
-        tab_frame3.pack(fill='both', expand=True)
 
-    if 4:
-        def f4():
-            print("start today_limit_up_pool_detail_in_longhubang")
-            from zhangting import today_limit_up_pool_detail_in_longhubang
-            limit_up_detail,_ = today_limit_up_pool_detail_in_longhubang()
-            pt4 = Table2(tab_frame4, dataframe=limit_up_detail, showtoolbar=True, showstatusbar=True,
-                    )
-            pt4.show()
-            
-        tab4 = ttk.Frame(notebook)
-        notebook.add(tab4, text="今日涨停池[+龙虎榜信息]")
-        update_button4 = ttk.Button(tab4, 
-                            text="start", 
-                            command=lambda:threading.Thread(target=f4).start())
-        update_button4.pack()
-        tab_frame4 = tk.Frame(tab4) # 创建一个table容器
-        tab_frame4.pack(fill='both', expand=True)
 
     if 5:
         tab5 = ttk.Frame(notebook)#board名录
@@ -528,39 +454,6 @@ if __name__ == "__main__":
         tab_frame6 = tk.Frame(tab6) # 创建一个table容器
         tab_frame6.pack(fill='both', expand=True)
       
-    if 7:
-        tab7 = ttk.Frame(notebook)
-        notebook.add(tab7, text="关注列表")
-        from ATTENTION import ATTENTION
-        df = pd.DataFrame(ATTENTION)
-        df.columns = ["代码"]
-        pt7 = Table2(tab7, dataframe=df, showtoolbar=True, showstatusbar=True,
-                    )
-        # tab6.pack(fill="both", expand=True)
-        pt7.show()
-           
-    if 8:
-        from hot_stock import getTodayStock
-        def get_stock_selection_df():
-            print("start stock selection!")
-            stock_selection_df = getTodayStock(save=0)
-            pt8 = Table2(tab_frame8, 
-                         dataframe=stock_selection_df, 
-                         showtoolbar=True, 
-                         showstatusbar=True,
-                    )
-            pt8.show()
-            
-             
-        tab8 = ttk.Frame(notebook)
-        notebook.add(tab8, text="选股")    
-        start_button_8 = ttk.Button(tab8, 
-                            text="start", 
-                            command=lambda:threading.Thread(target=get_stock_selection_df).start())
-        start_button_8.pack()
-        tab_frame8 = tk.Frame(tab8)
-        tab_frame8.pack(fill='both', expand=True)
-        
     if 9:
         def dapan():
             print("start dapan !!!")
@@ -602,7 +495,7 @@ if __name__ == "__main__":
             
             
             while str(t_name) == "交易中":
-                print("    循环更新")
+                print("    大盘趋势循环更新")
                 emx = pd.DataFrame(earn_money_xiaoying())
                 js_data = Continuous_limit_up().get_data_json(date=nearest_trade_date,filt=1)
                 t =js_data["data"]
@@ -644,6 +537,129 @@ if __name__ == "__main__":
         tab9.columnconfigure(1, weight=1)
         tab9.rowconfigure(1, weight=12) #奇怪
         tab9.rowconfigure(2, weight=1)
+           
+    if 8:
+        from hot_stock import getTodayStock
+        def get_stock_selection_df():
+            print("start stock selection!")
+            stock_selection_df = getTodayStock(save=0)
+            pt8 = Table2(tab_frame8, 
+                         dataframe=stock_selection_df, 
+                         showtoolbar=True, 
+                         showstatusbar=True,
+                    )
+            pt8.show()
+            
+             
+        tab8 = ttk.Frame(notebook)
+        notebook.add(tab8, text="选股")    
+        start_button_8 = ttk.Button(tab8, 
+                            text="start", 
+                            command=lambda:threading.Thread(target=get_stock_selection_df).start())
+        start_button_8.pack()
+        tab_frame8 = tk.Frame(tab8)
+        tab_frame8.pack(fill='both', expand=True)
+        
+
+    
+    
+    
+        
+    if 3:
+        def f3():
+            print("start stock2yyb")
+            from lhb import yyb_stocks2stock_yybs
+            from utils import getStrDate
+            date = getStrDate(1)
+            print(date)
+            ##构建营业部和股票的关系图
+            # lhb_yyb_stock_daily_work(start_date="20240731", end_date="20240731")
+            youzi_file = os.path.join(os.path.dirname(__file__),"swim_cash3.json")
+            # stock2yyb = yyb_stocks2stock_yybs(date,youzi_file)
+            
+            try:
+                stock2yyb = yyb_stocks2stock_yybs(date,youzi_file)#可能没更新
+            except:
+                stock2yyb = pd.DataFrame()
+            
+            
+            pt3 = Table2(tab_frame3, dataframe=stock2yyb, showtoolbar=True, showstatusbar=True,
+                    )
+            pt3.show()
+        
+        tab3 = ttk.Frame(notebook)
+        notebook.add(tab3, text="龙虎榜和营业部")
+        update_button3 = ttk.Button(tab3, 
+                            text="start", 
+                            command=lambda:threading.Thread(target=f3).start())
+        update_button3.pack()
+        tab_frame3 = tk.Frame(tab3) # 创建一个table容器
+        tab_frame3.pack(fill='both', expand=True)
+
+    
+
+    
+    
+    if 4:
+        def f4():
+            print("start today_limit_up_pool_detail_in_longhubang")
+            from zhangting import today_limit_up_pool_detail_in_longhubang
+            limit_up_detail,_ = today_limit_up_pool_detail_in_longhubang()
+            pt4 = Table2(tab_frame4, dataframe=limit_up_detail, showtoolbar=True, showstatusbar=True,
+                    )
+            pt4.show()
+            
+        tab4 = ttk.Frame(notebook)
+        notebook.add(tab4, text="今日涨停池[+龙虎榜信息]")
+        update_button4 = ttk.Button(tab4, 
+                            text="start", 
+                            command=lambda:threading.Thread(target=f4).start())
+        update_button4.pack()
+        tab_frame4 = tk.Frame(tab4) # 创建一个table容器
+        tab_frame4.pack(fill='both', expand=True)
+    
+    
+    
+    if 7:
+        tab7 = ttk.Frame(notebook)
+        notebook.add(tab7, text="关注列表")
+        from ATTENTION import ATTENTION
+        df = pd.DataFrame(ATTENTION)
+        df.columns = ["代码"]
+        pt7 = Table2(tab7, dataframe=df, showtoolbar=True, showstatusbar=True,
+                    )
+        # tab6.pack(fill="both", expand=True)
+        pt7.show()
+    
+    
+    if 2:
+        
+        def kongpan_qt():
+            print("start kongpan_attention")
+            data = kongpan_attention()
+            # stock_selection_df = getTodayStock(save=False)
+            # data = pd.merge(data[["代码","近来控盘比例趋势"]],
+            #                 stock_selection_df,
+            #                 left_on="代码",
+            #                 right_on="代码",
+            #                 how="left")
+            pt2 = Table2(tab_frame2, dataframe=data, showtoolbar=True, showstatusbar=True,
+                             )
+            pt2.show()
+                
+            
+        from hot_stock import kongpan_attention
+        tab2 = ttk.Frame(notebook)
+        notebook.add(tab2, text="关注控盘")
+        update_button2 = ttk.Button(tab2, 
+                            text="start", 
+                            command=lambda:threading.Thread(target=kongpan_qt).start())
+        update_button2.pack()
+        
+        tab_frame2 = tk.Frame(tab2)
+        tab_frame2.pack(fill='both', expand=True)
+    
+    
     
     if 10:   
         
