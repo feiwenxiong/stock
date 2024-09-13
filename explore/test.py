@@ -97,13 +97,7 @@ for period in periods:
         trends1[i].append(t.loc[i]["huolirate"])
     
         
-# for period in periods:
-#     t = get_taoli_weekday(symbol,tool_trade_date_hist_df,current_date,period)
-#     for i in t.index:
-#         trends[i].append(t.loc[i]["taoli"])
 
-
-# print(trends)
 
 
 import matplotlib.pyplot as plt

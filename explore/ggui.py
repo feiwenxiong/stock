@@ -319,10 +319,7 @@ def start_track_stock_changes_qt():
     
     
     
-# def task_for_this_file():
-#     cur_path = os.path.abspath(os.path.dirname(__file__))
-#     print(cur_path)
-#     time_diplayer(today_limit_up_pool_detail_in_longhubang,save=True)
+
 
 
 if __name__ == "__main__":
@@ -353,6 +350,9 @@ if __name__ == "__main__":
     root.title('myStock')
     frame = tk.Frame(root) #创建frame
     frame.pack(fill='both', expand=True)
+    
+    #自定义notebook
+    # notebook = MultiRowNotebook(frame)
     notebook = ttk.Notebook(frame) # 绑定notebook到frame上
     notebook.pack(fill='both', expand=True) #填充方式
     
@@ -403,7 +403,7 @@ if __name__ == "__main__":
 
     if 5:
         tab5 = ttk.Frame(notebook)#board名录
-        notebook.add(tab5, text="板块总体[实时]")
+        notebook.add(tab5, text="东财板块总体[实时]")
         from utils import is_now_open,is_now_break
         def f5():
             while 1:
@@ -439,7 +439,7 @@ if __name__ == "__main__":
         
         #添加tab frame
         tab6 = ttk.Frame(notebook)
-        notebook.add(tab6, text="某板块个股")
+        notebook.add(tab6, text="东财板块成分")
         #添加entry和绑定变量
         bankuai_var = tk.StringVar()  
         bankuai_var.set("消费电子")
@@ -461,39 +461,25 @@ if __name__ == "__main__":
             from zhangting import Continuous_limit_up,BlockTop
         
             emx = pd.DataFrame(earn_money_xiaoying())
-            pt91 = Table2(table_frame91, 
-                        dataframe=emx, 
-                        showtoolbar=True, 
-                        showstatusbar=True,
-                )
-            pt91.show()
             
+            pt91.model.df = emx
+            pt91.redraw()
             
             #######
             js_data = Continuous_limit_up().get_data_json(date=nearest_trade_date,filt=1)
             t = js_data["data"]
             t_name = t["trade_status"]["name"]
             t_data = pd.DataFrame(t["limit_up_count"]).reset_index()
-            pt92 = Table2(table_frame92, 
-                        dataframe=t_data, 
-                        showtoolbar=True, 
-                        showstatusbar=True,
-                )
-            pt92.show()
+            #update table
+            pt92.model.df = t_data
+            pt92.redraw()
             #############
             
-            
-            
             bt = BlockTop().get_data_df(date=nearest_trade_date,filt=1).drop("stock_list",axis=1)
-            
-            pt93 = Table2(table_frame93, 
-                            dataframe=bt, 
-                            showtoolbar=True, 
-                            showstatusbar=True,
-                            )
-            pt93.show()
-            
-            
+            #update table
+            pt93.model.df = bt
+            pt93.redraw()
+            ########
             while str(t_name) == "交易中":
                 print("    大盘趋势循环更新")
                 emx = pd.DataFrame(earn_money_xiaoying())
@@ -515,7 +501,7 @@ if __name__ == "__main__":
         
         
         tab9 = ttk.Frame(notebook)
-        notebook.add(tab9, text="大盘趋势[实时]")  
+        notebook.add(tab9, text="ths板块趋势[实时]")  
         button_9 = ttk.Button(tab9, 
                             text="start", 
                             command=lambda:threading.Thread(target=dapan).start())
@@ -524,9 +510,29 @@ if __name__ == "__main__":
         table_frame91 = ttk.Frame(tab9)
         table_frame92 = ttk.Frame(tab9)
         table_frame93 = ttk.Frame(tab9)
-        # table_frame91.pack( )
-        # table_frame92.pack( )
-        # table_frame93.pack( )
+        
+        
+        pt91 = Table2(table_frame91, 
+                        dataframe=pd.DataFrame(), 
+                        showtoolbar=True, 
+                        showstatusbar=True,
+                )
+        pt91.show()
+        pt92 = Table2(table_frame92, 
+                        dataframe=pd.DataFrame(), 
+                        showtoolbar=True, 
+                        showstatusbar=True,
+                )
+        pt92.show()
+        pt93 = Table2(table_frame93, 
+                            dataframe=pd.DataFrame(), 
+                            showtoolbar=True, 
+                            showstatusbar=True,
+                            )
+        pt93.show()
+        
+        
+       
         # 使用 grid 布局来分配表格位置
         table_frame91.grid(row=1, column=0, sticky='nsew')
         table_frame92.grid(row=1, column=1, sticky='nsew')
@@ -537,18 +543,70 @@ if __name__ == "__main__":
         tab9.columnconfigure(1, weight=1)
         tab9.rowconfigure(1, weight=12) #奇怪
         tab9.rowconfigure(2, weight=1)
-           
+    
+    if 11:
+        from zhangting import BlockTop,Continuous_limit_up
+        def f11_1(blocks):
+            t = []
+            for block in blocks:
+                t.extend(block["stock_list"])
+            t = pd.DataFrame(t)
+            t["first_limit_up_time"] = t["first_limit_up_time"].map(int).map(datetime.fromtimestamp)
+            t["last_limit_up_time"] = t["last_limit_up_time"].map(int).map(datetime.fromtimestamp)
+            return t
+        
+        def dapan_chengfengu():
+            print("start 同花顺热点板块成分股 ！")
+            bt = BlockTop().get_data_json(date=nearest_trade_date,filt=1)["data"]
+            bt = f11_1(bt)
+            pt11.model.df = bt
+            pt11.redraw()
+            
+            js_data = Continuous_limit_up().get_data_json(date=nearest_trade_date,filt=1)
+            t = js_data["data"]
+            t_name = t["trade_status"]["name"]
+            
+            while str(t_name) == "交易中":
+                print("    热点板块个股循环更新")
+                js_data = Continuous_limit_up().get_data_json(date=nearest_trade_date,filt=1)
+                t =js_data["data"]
+                t_name = t["trade_status"]["name"]
+            
+                bt = BlockTop().get_data_json(date=nearest_trade_date,filt=1)["data"]
+                bt = f11_1(bt)
+                
+                pt11.model.df = bt
+                
+                pt11.redraw()
+                
+                time.sleep(3)
+        
+        tab11 = ttk.Frame(notebook)
+        notebook.add(tab11, text="ths板块个股趋势[实时]")  
+        
+        
+        button_11 = ttk.Button(tab11, 
+                            text="start", 
+                            command=lambda:threading.Thread(target=dapan_chengfengu).start())
+        button_11.pack()
+        table_frame11 = ttk.Frame(tab11)
+        table_frame11.pack(fill='both', expand=True)
+        
+        pt11 = Table2(table_frame11, 
+                            dataframe=pd.DataFrame(), 
+                            showtoolbar=True, 
+                            showstatusbar=True,
+                            )
+        pt11.show()
+        
+        
     if 8:
         from hot_stock import getTodayStock
         def get_stock_selection_df():
             print("start stock selection!")
             stock_selection_df = getTodayStock(save=0)
-            pt8 = Table2(tab_frame8, 
-                         dataframe=stock_selection_df, 
-                         showtoolbar=True, 
-                         showstatusbar=True,
-                    )
-            pt8.show()
+            pt8.model.df = stock_selection_df
+            pt8.redraw()
             
              
         tab8 = ttk.Frame(notebook)
@@ -559,6 +617,13 @@ if __name__ == "__main__":
         start_button_8.pack()
         tab_frame8 = tk.Frame(tab8)
         tab_frame8.pack(fill='both', expand=True)
+        
+        pt8 = Table2(tab_frame8, 
+                         dataframe=pd.DataFrame(), 
+                         showtoolbar=True, 
+                         showstatusbar=True,
+                    )
+        pt8.show()
         
 
     
