@@ -15,53 +15,30 @@
 # print(t)
 # print(t.columns)
 # -*- coding: utf-8 -*-
-import tkinter as tk
-from cefpython3 import cefpython as cef
-import sys
+import requests
+from utils import getUserAgent
+import re
+import json
 
-class BrowserFrame(tk.Frame):
-    def __init__(self, master=None, **kwargs):
-        super().__init__(master, **kwargs)
-        self.browser_frame = None
-        self.browser = None
-        self.create_browser()
+url = f"https://d.10jqka.com.cn/v4/time/bk_885595/last.js"
+headers = {"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36",
+           "referer":"https://q.10jqka.com.cn/"}
+headers["User-Agent"] = getUserAgent()
 
-    def create_browser(self):
-        # 创建一个 Tkinter Frame 用于显示浏览器
-        self.browser_frame = tk.Frame(self, bg='black')
-        self.browser_frame.pack(fill='both', expand=True)
-        
-        # 使用 cefpython 创建浏览器
-        window_info = cef.WindowUtils.CreateWindowInfo(self.browser_frame.winfo_id())
-        self.browser = cef.CreateBrowserSync(window_info=window_info)
-        self.browser.SetClientHandler(LoadHandler())
-        
-        # 访问网页
-        self.browser.LoadUrl("https://q.10jqka.com.cn/")
+resp = requests.get(url,headers=headers)
+print(resp.status_code)
+if resp.status_code == 200:
+    print(resp.text)
 
-class LoadHandler(object):
-    def OnLoadingStateChange(self, is_loading, **_):
-        if not is_loading:
-            print("Page loaded")
+match = re.search(r'\((.*)\)', resp.text)
 
-def main():
-    # 初始化 CEF
-    cef.Initialize()
-
-    # 创建 Tkinter 主窗口
-    root = tk.Tk()
-    root.title("CEF in Tkinter")
-
-    # 创建并放置浏览器框架
-    browser_frame = BrowserFrame(root)
-    browser_frame.pack(fill='both', expand=True)
-
-    # 启动 Tkinter 主循环
-    root.mainloop()
-
-    # 清理 CEF
-    cef.Shutdown()
-
-if __name__ == "__main__":
-    main()
-
+# 如果有匹配项，则提取括号内的内容
+if match:
+    params = match.group(1)
+    print(f"括号内的内容: {params}")
+else:
+    print("没有找到匹配项")
+    
+t = json.loads(params)
+print(t)
+print(t["bk_885595"]["data"])
