@@ -520,7 +520,7 @@ if __name__ == "__main__":
             from zhangting import today_limit_up_pool_detail_in_longhubang
             limit_up_detail,_ = today_limit_up_pool_detail_in_longhubang()
             
-            p4.model.df = limit_up_detail
+            pt4.model.df = limit_up_detail
             pt4.redraw()
             
         tab4 = tab_frame_list[7]
@@ -667,6 +667,7 @@ if __name__ == "__main__":
         #https://d.10jqka.com.cn/v4/time/bk_885595/last.js
         #to do top板块走势和大盘走势叠加
         #标注
+        pass
     
     #####################################################################
     root.mainloop() 
