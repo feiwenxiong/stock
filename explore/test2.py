@@ -11,6 +11,7 @@
 # stock_zh_a_hist_min_em_df = ak.stock_zh_a_hist_min_em(symbol="000001", start_date="2024-09-11 09:30:00", end_date="2024-09-11 15:00:00", period="1", adjust="")
 # print(stock_zh_a_hist_min_em_df)
 from matplotlib import pyplot as plt
+from matplotlib.widgets import Cursor,MultiCursor
 plt.rcParams['font.sans-serif'] = ['SimHei'] # 指定默认字体
 plt.rcParams['axes.unicode_minus'] = False   # 解决保存图像是负号'-'显示为方块的问题
 import json
@@ -137,7 +138,7 @@ if __name__ == "__main__":  # 测试代码
     chuangye_index_df = (chuangye_index_df / chuangye_index_df.iloc[0] - 1.0) * 100
 
     stock_board_industry_name_em_df = ak.stock_board_industry_name_em()
-    stock_board_industry_name_em_df_5 = stock_board_industry_name_em_df.head()[["排名","板块名称","板块代码"]]
+    stock_board_industry_name_em_df_5 = stock_board_industry_name_em_df.head(6)[["排名","板块名称","板块代码"]]
     # print(stock_board_industry_name_em_df_5)
     # import akshare as ak
     # fig,axes = plt.sublots(5)
@@ -145,54 +146,59 @@ if __name__ == "__main__":  # 测试代码
         bankuai_rank = row["排名"]
         bankuai_code = row["板块代码"]
         bankuai_name = row["板块名称"]
-        plt.figure()
-        plt.subplot(2,1,1)
-        plt.title(f"分时图 rank{str(bankuai_rank)} : " + bankuai_name)
-        plt.ylabel("涨幅")
+
+        ##绘图
+        fig,ax = plt.subplots(1,2)
+        # plt.figure()
+        # ax = plt.subplot(2,1,1)
+        fig.suptitle(f"分时图 rank{str(bankuai_rank)} : " + bankuai_name)
+        ax[0].set_ylabel("涨幅")
         data_test = data_to_data_frame(get_minutely_data(bankuai_code,bankuai=True))
         data_test = (data_test / data_test.iloc[0] - 1.0) * 100
-        plt.plot(data_test.index,
+        ax[0].plot(data_test.index,
                  data_test.Close,
                  label=bankuai_name,
                  color="red",
                  linewidth=1)
-        plt.plot(shanghai_index_df.index,
+        ax[0].plot(shanghai_index_df.index,
                  shanghai_index_df.Close,
                  label="上证指数",
                  color="green",
                  linewidth=1)
-        plt.plot(sz_index_df.index,
+        ax[0].plot(sz_index_df.index,
                  sz_index_df.Close,
                  label="深证指数",
                  color="blue",
                  linewidth=1)
-        plt.plot(chuangye_index_df.index,
+        ax[0].plot(chuangye_index_df.index,
                  chuangye_index_df.Close,
                  label="创业指数",
                  color="black",
                  linewidth=1)
-        plt.legend()
+        # cursor = Cursor(ax[0], useblit=True, color='red', linewidth=1,linestyle='--')
+        ax[0].legend()
+        ax[0].grid()
+        ax[0].set_title("板块和指数走势")
+        #找出当前板块的排行前8股票
         stock_board_industry_cons_em_df = ak.stock_board_industry_cons_em(symbol=bankuai_name).head(8)
-        # print(stock_board_industry_cons_em_df)
-        plt.subplot(2,1,2)
         for index,row in stock_board_industry_cons_em_df.iterrows():
-            # print(row)
             stock_rank = row["序号"]
             stock_code = row["代码"]
             stock_name = row["名称"]
-            # print(stock_code,get_minutely_data(stock_code,bankuai=False))
+            #获取1min分时数据
             data_test_ = data_to_data_frame(get_minutely_data(stock_code,bankuai=False))
+            #scale
             data_test_ = (data_test_ / data_test_.iloc[0] - 1.0) * 100
-            plt.plot(data_test_.index,
+            ax[1].plot(data_test_.index,
                      data_test_.Close,
                      label=f"rank{str(stock_rank)}: "+ stock_name,
                      linewidth=1)
-            plt.legend()
-            plt.tight_layout()
+        ax[1].legend()
+        ax[1].grid()
+        ax[1].set_title("板块内股票走势")
+        multi = MultiCursor(fig.canvas, ax, color='r', lw=1,linestyle="--",horizOn=True, vertOn=True)
+
+        # cursor1 = Cursor(ax[1], useblit=True, color='red', linewidth=1,linestyle='--')
         plt.show()
 
 
-    # stock_board_industry_cons_em_df = ak.stock_board_industry_cons_em(symbol="保险")
-    # print(stock_board_industry_cons_em_df)
-    
-    # http://3.push2.eastmoney.com/api/qt/stock/sse?fields=f58,f107,f57,f43,f59,f169,f170,f152,f46,f60,f44,f45,f47,f48,f19,f532,f39,f161,f49,f171,f50,f86,f600,f601,f154,f84,f85,f168,f108,f116,f167,f164,f92,f71,f117,f292,f113,f114,f115&mpi=1000&invt=2&fltt=1&secid=90.BK0474&ut=fa5fd1943c7b386f172d6893dbfba10b&dect=1&wbp2u=|0|0|0|web
