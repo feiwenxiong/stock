@@ -162,6 +162,14 @@ if __name__ == "__main__":
     # notebook = MultiRowNotebook(frame)
     notebook = ttk.Notebook(frame,bootstyle=ttk.SUCCESS) # 绑定notebook到frame上
     notebook.pack(fill='both', expand=True) #填充方式
+    
+    
+    # 添加滚动条
+    canvas = tk.Canvas(notebook)
+    scrollbar = ttk.Scrollbar(frame, orient="horizontal", command=canvas.xview)
+    scrollbar.pack(side="bottom", fill="x")
+    canvas.config(xscrollcommand=scrollbar.set)
+    
     tabs_cn = ["涨停池[实时]", "东财板块总体[实时]", "东财板块成分",
             "ths板块趋势[实时]", "ths板块个股趋势[实时]", "选股",
             "龙虎榜和营业部", "今日涨停池[+龙虎榜信息]", "关注列表",
@@ -216,8 +224,6 @@ if __name__ == "__main__":
         table_frame.place(x=20,y=150) 
         # table_frame.pack(side="top", fill="both", expand=True)
     
-
-
     if 5:
         tab5 = tab_frame_list[1] #board名录
         # notebook.add(tab5, text="东财板块总体[实时]")
@@ -664,10 +670,11 @@ if __name__ == "__main__":
     
     
     if 11:
-        #https://d.10jqka.com.cn/v4/time/bk_885595/last.js
-        #to do top板块走势和大盘走势叠加
-        #标注
+        from hot_bankuai_dapan_minute_plot import get_bankuai_dapan_minute_trend,MatplotlibTab
+        # fig_bankuai = get_bankuai_dapan_minute_trend()
+        matplotlib_tab = MatplotlibTab(notebook,None,tab_name="HOT分时图")
         pass
+        
     
     #####################################################################
     root.mainloop() 
