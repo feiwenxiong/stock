@@ -25,6 +25,7 @@ from utils import is_now_break,is_now_open
 import akshare as ak
 import concurrent.futures
 import threading
+import akshare as ak
 def _get_market_code(stock_code):
     """
     根据股票代码计算出市场代码。
@@ -34,8 +35,8 @@ def _get_market_code(stock_code):
     # 获取股票代码的前缀
     code_prefix = int(stock_code[0])
 
-    # 根据前缀判断市场
-    if code_prefix in [0, 2, 3]:  # 深圳股票代码前缀一般为 0、2、3
+    # 根据前缀判断市场[更新20240919]
+    if code_prefix in [0, 2, 3,4,8]:  # 深圳股票代码前缀一般为 0、2、3
         return 0  # 深圳市场
     elif code_prefix in [6, 9]:  # 上海股票代码前缀一般为 6、9
         return 1  # 上海市场
@@ -124,6 +125,9 @@ def data_to_data_frame(data: dict) -> pd.DataFrame:
             io.StringIO(trend_csv_content), delimiter=',', dtype=type_mapping,
             parse_dates=['Time'], index_col='Time')
         # logger.info(f"df_data: {df_data}")
+        
+        
+         
         return df_data
     except Exception as e:
         logging.error(f"异常：{e}")
@@ -169,6 +173,7 @@ def get_bankuai_dapan_minute_trend2(show=False):
         # ax[0].set_ylabel("涨幅")
         data_test = data_to_data_frame(get_minutely_data(bankuai_code,bankuai=True))
         data_test = (data_test / data_test.iloc[0] - 1.0) * 100
+        
         # ax[0].plot(data_test.index,
         #          data_test.Close,
         #          label=bankuai_name,
@@ -207,7 +212,11 @@ def get_bankuai_dapan_minute_trend2(show=False):
             #获取1min分时数据
             data_test_ = data_to_data_frame(get_minutely_data(stock_code,bankuai=False))
             #scale
+            tmp_vol = data_test_["Volumn"]
             data_test_ = (data_test_ / data_test_.iloc[0] - 1.0) * 100
+            fluid_shares = ak.stock_individual_info_em(symbol=stock_code)["流通股"]
+            fluid_shares = tmp_vol / fluid_shares * 100
+            data_test_["Turnover"] = fluid_shares
             # ax[1].plot(data_test_.index,
             #          data_test_.Close,
             #          label=f"rank{str(stock_rank)}: "+ stock_name,
@@ -238,8 +247,15 @@ def get_bankuai_data(bankuai_name, bankuai_code,bankuai_rank):
     return bankuai_name, data_test,bankuai_rank
 
 def get_bankuai_stock_data(stock_name, stock_code, stock_rank):
-    data_test_ = data_to_data_frame(get_minutely_data(stock_code, bankuai=False))
-    data_test_ = (data_test_ / data_test_.iloc[0] - 1.0) * 100
+    tmp = get_minutely_data(stock_code, bankuai=False)
+    # print(stock_code)
+    data_test_ = data_to_data_frame(tmp)
+    # print(data_test_)
+    if data_test_ is not None:
+        data_test_ = (data_test_ / data_test_.iloc[0] - 1.0) * 100
+    else:
+        print(stock_name, stock_code, stock_rank)
+        data_test_ = pd.DataFrame()
     return stock_name, data_test_, stock_rank
 
 def get_bankuai_dapan_minute_trend(show=False):
@@ -286,7 +302,7 @@ def get_bankuai_dapan_minute_trend(show=False):
             for stock_future in concurrent.futures.as_completed(stock_futures):
                 stock_name, stock_data, stock_rank = stock_future.result()
                 # inner[bankuai_name][stock_name] = [stock_rank,data_test_]
-                inner[bankuai_name][stock_name] = [stock_rank,stock_data]
+                inner[bankuai_name][stock_name] = [stock_rank,stock_data,stock_code] #add code
     print(time.time() - s)
     return outer, inner
 
@@ -371,15 +387,20 @@ class MatplotlibTab:
                 shanghai_index_df = outer[0][1]
                 sz_index_df = outer[1][1]
                 chuangye_index_df = outer[2][1]
+                #[上证，深圳，]
                 for i in range(3,len(outer)):
                     #添加十字线
-                    fig,ax = plt.subplots(2,1)
+                    fig,ax = plt.subplots(3,1,
+                                          figsize=(8,12), 
+                                          sharex=False)
+                    
+                    
                     bankuai_name = outer[i][0]
                     bankuai_rank = outer[i][1][0]
                     # print(outer,len(outer))
                     bankuai_data = outer[i][1][1]
                     
-                    fig.suptitle(f"分时图 rank{str(bankuai_rank)} : " + bankuai_name)
+                    # fig.suptitle(f"分时图 rank{str(bankuai_rank)} : " + bankuai_name)
                     
                     if 1:
                         #板块与指数叠加
@@ -403,8 +424,11 @@ class MatplotlibTab:
                                 label=outer[2][0],
                                 color="black",
                                 linewidth=1)
-                        ax[0].set_label("板块涨幅")
+                        ax[0].set_ylabel("板块涨幅")
+                        ax[0].set_title(f"分时图 rank{str(bankuai_rank)} : " + bankuai_name)
                         ax[0].grid()
+                        ax[0].legend()
+                        # ax[0].tight_layout()
                         
                         #板块内个股分时图叠加
                         for stock_name,item in inner[bankuai_name].items():
@@ -414,14 +438,34 @@ class MatplotlibTab:
                             # stock_name = item[0]
                             stock_rank = item[0]
                             stock_data = item[1]
+                            stock_code = item[2]
+                            # print(stock_data)
                             ax[1].plot(stock_data.index,
                                     stock_data.Close,
                                     label=stock_name,
                                     linewidth=1)
+                            
+                            #添加turnober
+                            
+                            tmp_vol = stock_data["Volume"]
+                            fluid_shares = ak.stock_individual_info_em(symbol=stock_code).iloc[7]["value"]
+                            fluid_shares = tmp_vol * 100 / fluid_shares * 100
+                            stock_data["Turnover"] = fluid_shares
+                           
+                            ax[2].plot(stock_data.index,
+                                    stock_data.Turnover,
+                                    label=stock_name,
+                                    linewidth=1)
                         ax[1].legend()
                         ax[1].grid()
-                        # ax[1].set_title("板块内股票走势")
-                        ax[0].set_label("板块内股票涨幅")
+                        ax[1].set_ylabel("个股票涨幅%")
+                        # ax[1].tight_layout()
+                        
+                        ax[2].legend()
+                        ax[2].grid()
+                        ax[2].set_ylabel("个股换手率%")
+                        # ax[2].tight_layout()
+                        # plt.tight_layout()
                     
                     #添加十字线
                     fig = self.create_chart(fig)
@@ -453,14 +497,43 @@ class MatplotlibTab:
         return some_fig
     def on_mouse_move(self, event):
         """ 处理鼠标移动事件，以更新十字线 """
+        from matplotlib.dates import num2date
+
         if event.inaxes is not None:  # 确保事件发生在一个子图中
             for hline, vline, axis in self.cross_lines:
                 if event.inaxes == axis:
+                    
+                    
+                    
                     x, y = event.xdata, event.ydata
+                    x_datetime = num2date(x).strftime("%Y-%m-%d %H:%M:%S")
                     # 更新十字线的坐标
                     hline.set_data([axis.get_xlim()[0], axis.get_xlim()[1]], [y, y])
                     vline.set_data([x, x], [axis.get_ylim()[0], axis.get_ylim()[1]])
+                    
+                    # if hasattr(self, 'annot'):
+                    #     self.annot.remove()
+
+                    # # 添加新的坐标注释
+                    # self.annot = axis.annotate(f'x={x:.2f}, y={y:.2f}', 
+                    #                            xy=(x, y), 
+                    #                            xytext=(x + 1, y + 1),  # 注释在交点的偏移位置
+                    #                            fontsize=3,
+                    #                            textcoords="offset points", 
+                    #                            bbox=dict(boxstyle="round,pad=0.3", edgecolor="black", facecolor="lightyellow"),
+                    #                            arrowprops=dict(arrowstyle="->", color="black"))
+                    # # 使用 draw_idle 进行高效更新
+                    # print(x,y)
+                    
+                    # 在左上角显示坐标
+                    # axis.texts.clear()  # 清除之前的文本
+                    for txt in axis.texts:
+                        txt.remove()
+                    axis.text(0.02, 0.98, f"X: {x_datetime}, Y: {y:.2f}", transform=axis.transAxes, 
+                            fontsize=10, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
+
                     # 使用 draw_idle 进行高效更新
+                    event.inaxes.figure.canvas.draw_idle()
                     event.inaxes.figure.canvas.draw_idle()
 
     def on_mouse_wheel(self, event):
@@ -472,6 +545,7 @@ class MatplotlibTab:
 
 if __name__ == "__main__":  # 测试代码
     print(get_bankuai_dapan_minute_trend(show=True))
+    # print(data_to_data_frame(get_minutely_data("603660", bankuai=False)))
     # #上证
     # 1.000001#上证
     # 0.399001#深圳

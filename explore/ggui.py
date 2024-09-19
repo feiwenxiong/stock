@@ -12,21 +12,21 @@ from hot_stock import *
 import time
 from lhb import yyb_stocks2stock_yybs 
 import pandas as pd
-from rich.console import Console
-from rich.table import Table
-from rich.live import Live
-import select  # 确保导入 select 模块
-import keyboard
+# from rich.console import Console
+# from rich.table import Table
+# from rich.live import Live
+# import select  # 确保导入 select 模块
+# import keyboard
 import tkinter as tk
-import pandastable
+# import pandastable
 from pandastable import Table as Table2
-import pandas as pd
+# import pandas as pd
 # from tkinter import ttk
 import ttkbootstrap as ttk
 # from ttkbootstrap.constants import *
 import warnings
 from zhangting import LimitUpPool,DataFramePretty
-from utils import closest_trade_date
+# from utils import closest_trade_date
 from PIL import Image, ImageTk
 # import webbrowser
 from jin10tab import Jin10App
@@ -123,9 +123,6 @@ def start_track_stock_changes_qt():
     start_update(stop_event,update_thread)
     print("updating thread started!")
     
-
-
-
 if __name__ == "__main__":
     #####################################################################
     #global variable
@@ -141,8 +138,6 @@ if __name__ == "__main__":
                         background='yellow',  # 设置背景颜色
                         foreground='black',       # 设置前景（文本）颜色
                         padding=10) 
-    
-
     theme_names = style.theme_names()#以列表的形式返回多个主题名
     print("themes: ",theme_names)
     wwidth = 1480 #1080
@@ -164,19 +159,16 @@ if __name__ == "__main__":
     notebook = ttk.Notebook(frame,bootstyle=ttk.SUCCESS) # 绑定notebook到frame上
     notebook.pack(fill='both', expand=True) #填充方式
     
-    
-    
     if "html":
         # 创建一个选项卡并将 Jin10App 的内容添加到选项卡中
         news_frame = tk.Frame(notebook)
         notebook.add(news_frame, text="新闻直播")
-        
         # 初始化 Jin10App 并将其绑定到 Notebook 的选项卡中
         app = Jin10App(news_frame)
  
     
     
-    
+    #通用tab模板
     # 添加滚动条
     canvas = tk.Canvas(notebook)
     scrollbar = ttk.Scrollbar(frame, orient="horizontal", command=canvas.xview)
@@ -417,7 +409,7 @@ if __name__ == "__main__":
         tab9.rowconfigure(1, weight=12) #奇怪
         tab9.rowconfigure(2, weight=1)
     
-    if 11:
+    if 11: 
         from zhangting import BlockTop,Continuous_limit_up
         def f11_1(blocks):
             t = []
@@ -683,7 +675,7 @@ if __name__ == "__main__":
     
     
     if 11:
-        from hot_bankuai_dapan_minute_plot import get_bankuai_dapan_minute_trend,MatplotlibTab
+        from fenshitu_tab import get_bankuai_dapan_minute_trend,MatplotlibTab
         # fig_bankuai = get_bankuai_dapan_minute_trend()
         matplotlib_tab = MatplotlibTab(notebook,None,tab_name="HOT分时图")
         pass

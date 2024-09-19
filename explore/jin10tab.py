@@ -43,6 +43,7 @@ class Jin10App:
         headers = {
             "x-app-id": "SO1EJGmNgCtmpcPF",
             "x-version": "1.0.0",
+            "referer": "https://www.jin10.com/",
         }
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         queryParam = {
@@ -51,10 +52,17 @@ class Jin10App:
         }
         headers["User-Agent"] =  UserAgent().random
         resp = requests.get(url, headers=headers, params=queryParam)
+        if resp.status_code != 200:  # 确保请求成功
+            print(f"Error: {resp.status_code}")
+            
         data = resp.json()['data']
         content_list = []
+        # print(data)
         for item in data:
+            if not item["data"].get("content",None):
+                continue
             news_id = item["id"]
+            # print(item)
             content = {
                 "内容": item["data"]["content"],
                 "时间": item["time"],
