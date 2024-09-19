@@ -45,6 +45,10 @@ import akshare as ak
 from datetime import datetime
 import pandas as pd
 from utils import *
+
+'''
+测试日期套利
+'''
 current_date = closest_trade_date()
 current_date = datetime.strptime(current_date,"%Y%m%d")
 tool_trade_date_hist_df = ak.tool_trade_date_hist_sina()

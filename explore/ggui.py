@@ -28,7 +28,8 @@ import warnings
 from zhangting import LimitUpPool,DataFramePretty
 from utils import closest_trade_date
 from PIL import Image, ImageTk
-import webbrowser
+# import webbrowser
+from jin10tab import Jin10App
 warnings.filterwarnings('ignore')
 pd.set_option('future.no_silent_downcasting', True)
 
@@ -162,6 +163,18 @@ if __name__ == "__main__":
     # notebook = MultiRowNotebook(frame)
     notebook = ttk.Notebook(frame,bootstyle=ttk.SUCCESS) # 绑定notebook到frame上
     notebook.pack(fill='both', expand=True) #填充方式
+    
+    
+    
+    if "html":
+        # 创建一个选项卡并将 Jin10App 的内容添加到选项卡中
+        news_frame = tk.Frame(notebook)
+        notebook.add(news_frame, text="新闻直播")
+        
+        # 初始化 Jin10App 并将其绑定到 Notebook 的选项卡中
+        app = Jin10App(news_frame)
+ 
+    
     
     
     # 添加滚动条

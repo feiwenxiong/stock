@@ -1,15 +1,3 @@
-
-
-# import akshare as ak
-
-# stock_board_industry_hist_min_em_df = ak.stock_board_industry_hist_min_em(symbol="保险", period="1")
-# print(stock_board_industry_hist_min_em_df)
-
-# import akshare as ak
-
-# # 注意：该接口返回的数据只有最近一个交易日的有开盘价，其他日期开盘价为 0
-# stock_zh_a_hist_min_em_df = ak.stock_zh_a_hist_min_em(symbol="000001", start_date="2024-09-11 09:30:00", end_date="2024-09-11 15:00:00", period="1", adjust="")
-# print(stock_zh_a_hist_min_em_df)
 from matplotlib import pyplot as plt
 import time
 from matplotlib.widgets import Cursor,MultiCursor
@@ -392,7 +380,9 @@ class MatplotlibTab:
                     bankuai_data = outer[i][1][1]
                     
                     fig.suptitle(f"分时图 rank{str(bankuai_rank)} : " + bankuai_name)
+                    
                     if 1:
+                        #板块与指数叠加
                         ax[0].plot(bankuai_data.index,
                             bankuai_data.Close,
                             label=bankuai_name,
@@ -413,7 +403,10 @@ class MatplotlibTab:
                                 label=outer[2][0],
                                 color="black",
                                 linewidth=1)
+                        ax[0].set_label("板块涨幅")
                         ax[0].grid()
+                        
+                        #板块内个股分时图叠加
                         for stock_name,item in inner[bankuai_name].items():
                             # （name,[rank,data]）
                             # item = list(item.items())
@@ -427,14 +420,15 @@ class MatplotlibTab:
                                     linewidth=1)
                         ax[1].legend()
                         ax[1].grid()
-                        ax[1].set_title("板块内股票走势")
+                        # ax[1].set_title("板块内股票走势")
+                        ax[0].set_label("板块内股票涨幅")
                     
                     #添加十字线
                     fig = self.create_chart(fig)
                     
                     #创建图表
                     canvas_fig = FigureCanvasTkAgg(fig, self.scrollable_frame)
-                    canvas_fig.get_tk_widget().grid(row=(i - 3) // 2, column=(i - 3) % 2, padx=10, pady=10, sticky="ew")
+                    canvas_fig.get_tk_widget().grid(row=(bankuai_rank - 1) // 2, column=(bankuai_rank - 1) % 2, padx=10, pady=10, sticky="ew")
                     canvas_fig.draw()  # 手动刷新每个图表
                     
                     # 记录图表和canvas
