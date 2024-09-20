@@ -28,7 +28,7 @@ import warnings
 from zhangting import LimitUpPool,DataFramePretty
 # from utils import closest_trade_date
 from PIL import Image, ImageTk
-# import webbrowser
+import webbrowser
 from jin10tab import Jin10App
 warnings.filterwarnings('ignore')
 pd.set_option('future.no_silent_downcasting', True)
