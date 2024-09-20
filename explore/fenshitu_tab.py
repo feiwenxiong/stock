@@ -442,7 +442,7 @@ class MatplotlibTab:
                             # print(stock_data)
                             ax[1].plot(stock_data.index,
                                     stock_data.Close,
-                                    label=stock_name,
+                                    label=f"{stock_rank}_{stock_name},
                                     linewidth=1)
                             
                             #添加turnober
@@ -454,7 +454,7 @@ class MatplotlibTab:
                            
                             ax[2].plot(stock_data.index,
                                     stock_data.Turnover,
-                                    label=stock_name,
+                                    label=f"{stock_rank}_{stock_name}",
                                     linewidth=1)
                         ax[1].legend()
                         ax[1].grid()
